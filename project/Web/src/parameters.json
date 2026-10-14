@@ -1,0 +1,317 @@
+[
+  {
+    "id": "key",
+    "name": "Key",
+    "lo": 0.0,
+    "hi": 11.0,
+    "step": 1.0,
+    "initial": 0.0,
+    "page": 0
+  },
+  {
+    "id": "scale",
+    "name": "Scale",
+    "lo": 0.0,
+    "hi": 4.0,
+    "step": 1.0,
+    "initial": 0.0,
+    "page": 0
+  },
+  {
+    "id": "style",
+    "name": "Style",
+    "lo": 0.0,
+    "hi": 1.0,
+    "step": 1.0,
+    "initial": 0.0,
+    "page": 0
+  },
+  {
+    "id": "auto",
+    "name": "Processing On",
+    "lo": 0.0,
+    "hi": 1.0,
+    "step": 1.0,
+    "initial": 1.0,
+    "page": 0
+  },
+  {
+    "id": "retune",
+    "name": "Retune (ms)",
+    "lo": 1.0,
+    "hi": 150.0,
+    "step": 1.0,
+    "initial": 35.0,
+    "page": 0
+  },
+  {
+    "id": "humanize",
+    "name": "Humanize (%)",
+    "lo": 0.0,
+    "hi": 100.0,
+    "step": 1.0,
+    "initial": 20.0,
+    "page": 0
+  },
+  {
+    "id": "formant",
+    "name": "Formant colour",
+    "lo": -12.0,
+    "hi": 12.0,
+    "step": 0.1,
+    "initial": 0.0,
+    "page": 0
+  },
+  {
+    "id": "correction",
+    "name": "Correction (%)",
+    "lo": 0.0,
+    "hi": 100.0,
+    "step": 1.0,
+    "initial": 100.0,
+    "page": 0
+  },
+  {
+    "id": "threshold",
+    "name": "Threshold (dB)",
+    "lo": -60.0,
+    "hi": 0.0,
+    "step": 0.1,
+    "initial": -18.0,
+    "page": 1
+  },
+  {
+    "id": "ratio",
+    "name": "Ratio",
+    "lo": 1.0,
+    "hi": 12.0,
+    "step": 0.1,
+    "initial": 3.0,
+    "page": 1
+  },
+  {
+    "id": "attack",
+    "name": "Attack (ms)",
+    "lo": 0.1,
+    "hi": 100.0,
+    "step": 0.1,
+    "initial": 10.0,
+    "page": 1
+  },
+  {
+    "id": "release",
+    "name": "Release (ms)",
+    "lo": 10.0,
+    "hi": 1000.0,
+    "step": 1.0,
+    "initial": 120.0,
+    "page": 1
+  },
+  {
+    "id": "makeup",
+    "name": "Makeup (dB)",
+    "lo": 0.0,
+    "hi": 18.0,
+    "step": 0.1,
+    "initial": 0.0,
+    "page": 1
+  },
+  {
+    "id": "eq1f",
+    "name": "Band 1 Hz",
+    "lo": 30.0,
+    "hi": 500.0,
+    "step": 1.0,
+    "initial": 100.0,
+    "page": 2
+  },
+  {
+    "id": "eq1g",
+    "name": "Band 1 dB",
+    "lo": -12.0,
+    "hi": 12.0,
+    "step": 0.1,
+    "initial": 0.0,
+    "page": 2
+  },
+  {
+    "id": "eq1q",
+    "name": "Band 1 Q",
+    "lo": 0.2,
+    "hi": 10.0,
+    "step": 0.1,
+    "initial": 0.7,
+    "page": 2
+  },
+  {
+    "id": "eq2f",
+    "name": "Band 2 Hz",
+    "lo": 100.0,
+    "hi": 1500.0,
+    "step": 1.0,
+    "initial": 300.0,
+    "page": 2
+  },
+  {
+    "id": "eq2g",
+    "name": "Band 2 dB",
+    "lo": -12.0,
+    "hi": 12.0,
+    "step": 0.1,
+    "initial": 0.0,
+    "page": 2
+  },
+  {
+    "id": "eq2q",
+    "name": "Band 2 Q",
+    "lo": 0.2,
+    "hi": 10.0,
+    "step": 0.1,
+    "initial": 1.0,
+    "page": 2
+  },
+  {
+    "id": "eq3f",
+    "name": "Band 3 Hz",
+    "lo": 400.0,
+    "hi": 5000.0,
+    "step": 1.0,
+    "initial": 1200.0,
+    "page": 2
+  },
+  {
+    "id": "eq3g",
+    "name": "Band 3 dB",
+    "lo": -12.0,
+    "hi": 12.0,
+    "step": 0.1,
+    "initial": 0.0,
+    "page": 2
+  },
+  {
+    "id": "eq3q",
+    "name": "Band 3 Q",
+    "lo": 0.2,
+    "hi": 10.0,
+    "step": 0.1,
+    "initial": 1.0,
+    "page": 2
+  },
+  {
+    "id": "eq4f",
+    "name": "Band 4 Hz",
+    "lo": 1000.0,
+    "hi": 12000.0,
+    "step": 1.0,
+    "initial": 3500.0,
+    "page": 2
+  },
+  {
+    "id": "eq4g",
+    "name": "Band 4 dB",
+    "lo": -12.0,
+    "hi": 12.0,
+    "step": 0.1,
+    "initial": 0.0,
+    "page": 2
+  },
+  {
+    "id": "eq4q",
+    "name": "Band 4 Q",
+    "lo": 0.2,
+    "hi": 10.0,
+    "step": 0.1,
+    "initial": 1.0,
+    "page": 2
+  },
+  {
+    "id": "eq5f",
+    "name": "Band 5 Hz",
+    "lo": 3000.0,
+    "hi": 20000.0,
+    "step": 1.0,
+    "initial": 10000.0,
+    "page": 2
+  },
+  {
+    "id": "eq5g",
+    "name": "Band 5 dB",
+    "lo": -12.0,
+    "hi": 12.0,
+    "step": 0.1,
+    "initial": 0.0,
+    "page": 2
+  },
+  {
+    "id": "eq5q",
+    "name": "Band 5 Q",
+    "lo": 0.2,
+    "hi": 10.0,
+    "step": 0.1,
+    "initial": 0.7,
+    "page": 2
+  },
+  {
+    "id": "delayMix",
+    "name": "Delay wet",
+    "lo": 0.0,
+    "hi": 0.6,
+    "step": 0.01,
+    "initial": 0.0,
+    "page": 3
+  },
+  {
+    "id": "delayBeats",
+    "name": "Delay beats",
+    "lo": 0.125,
+    "hi": 2.0,
+    "step": 0.125,
+    "initial": 0.5,
+    "page": 3
+  },
+  {
+    "id": "feedback",
+    "name": "Delay feedback",
+    "lo": 0.0,
+    "hi": 0.85,
+    "step": 0.01,
+    "initial": 0.25,
+    "page": 3
+  },
+  {
+    "id": "reverbMix",
+    "name": "Reverb wet",
+    "lo": 0.0,
+    "hi": 0.6,
+    "step": 0.01,
+    "initial": 0.0,
+    "page": 3
+  },
+  {
+    "id": "room",
+    "name": "Room",
+    "lo": 0.0,
+    "hi": 1.0,
+    "step": 0.01,
+    "initial": 0.45,
+    "page": 3
+  },
+  {
+    "id": "output",
+    "name": "Output (dB)",
+    "lo": -24.0,
+    "hi": 12.0,
+    "step": 0.1,
+    "initial": 0.0,
+    "page": 3
+  },
+  {
+    "id": "bpm",
+    "name": "Fallback tempo",
+    "lo": 30.0,
+    "hi": 300.0,
+    "step": 1.0,
+    "initial": 120.0,
+    "page": 3
+  }
+]

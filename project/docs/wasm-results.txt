@@ -1,0 +1,7 @@
+
+> matale-tune-workbench@0.2.0 test:dsp
+> node tests/wasm-test.mjs && node tests/worklet-test.mjs
+
+WASM imports []
+PASS: WASM init, block processing, pitch, finite output, Auto and fixed memory
+PASS: actual worklet adapter stereo output, telemetry and Auto messages

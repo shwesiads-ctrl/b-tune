@@ -1,53 +1,41 @@
-# Matale Tune — browser preview first
+# Matale Tune browser preview 0.3.0
 
-No new VST3, Standalone or AU release is produced in this step. Validate the
-browser UI and audio before returning to platform builds.
+Extract the repository ZIP and open `MataleTune-Browser`:
 
-## Run the ready-built preview
+- Windows: double-click `Start-Browser-Windows.bat`.
+- macOS/Linux: run `python3 Start-Browser.py` in that folder.
+- Python 3 and current desktop Chrome/Edge are required. No npm setup is needed
+  to use the included ready-built preview. Do not open index.html directly.
 
-Requires Python 3 and a current desktop Chrome/Edge browser. No npm installation
-or DSP rebuild is needed to try the included prebuilt preview.
+Choose Vocal file (looping playback) or Mic input. Wear headphones before
+turning on microphone Monitor, which starts muted. Choose key and scale, then
+sing for three seconds and press AUTO. Stop releases the input; Ctrl+C in the
+launcher terminal stops its local web server. Audio stays on your computer.
 
-1. Extract the ZIP completely; do not open index.html directly.
-2. Windows: double-click Start-Browser-Windows.bat.
-3. macOS: open Start-Browser-macOS.command. Alternatively open Terminal in the
-   extracted folder and run `python3 Start-Browser.py`.
-4. A browser opens. Choose Vocal file (loops on playback) or Mic input.
-5. Wear headphones before enabling microphone Monitor. Monitoring starts muted.
-6. Choose key/scale, sing for three seconds and press AUTO. Try each manual page.
-7. Stop releases audio resources. Close the terminal or press Ctrl+C to stop
-   the preview server. If the port is occupied, run `python3 Start-Browser.py
-   --port 0` (Windows: `py -3 Start-Browser.py --port 0`).
+Knobs: drag up/down, arrow keys, Home/End, Shift-drag for fine adjustment,
+Shift+arrows for coarse adjustment, double-click to reset. There are no sliders.
 
-This runs only on your computer; audio is not uploaded. The chat environment
-has no supported public browser-preview link. The included launcher lets you
-review and listen in your own browser.
+New working features: preset selection and Save/Import JSON, A/B comparison,
+Vocal Smooth, Harsh control, Warmth, Presence, De-Esser, stage bypass and
+per-stage Auto, measured pitch confidence/range/register estimate/RMS energy,
+actual spectrum/waveform, momentary LUFS and L/R peaks, audio settings.
 
-## What has been verified
+Editable source is in `project/` in the GitHub repository. The running preview
+also includes a source ZIP download. See `docs/BROWSER-FEATURES.md` in the source
+for implementation, validation and limits. New vocal processing currently runs
+in the browser AudioWorklet; native plugin parity is a future step.
 
-- TypeScript checking and Vite production build.
-- Existing WASM and AudioWorklet DSP checks and three session regression checks.
-- Real headless Chromium: PCM WAV decoding, AudioWorklet processing with the
-  supplied WASM, A4 pitch detection, non-silent output telemetry, keyboard
-  parameter changes, Auto recommendations with key/scale preserved, all manual
-  pages, EQ adjustment and Stop.
-- Chromium's synthetic microphone: muted startup, monitor toggle and tracks
-  ending after Stop. This does not test a physical microphone or loudspeakers.
-- Narrow 390px viewport without horizontal overflow and no uncaught page errors.
+For source development, from `project/Web` (or `Web` in the source ZIP) run:
 
-Browser screenshots use an automated sine-wave fixture, not a recorded vocal
-or a DAW session. Listening quality, real hardware and other browsers still need
-user testing. Browser/device latency is additional to the 2048-frame DSP delay.
+    npm ci
+    npm run build
+    npm run test:dsp
+    npm run test:session
+    npx playwright install chromium
+    npm run test:browser
 
-The underlying DSP, parameter definitions, WASM binary and native processor
-remain unchanged. The web presentation uses existing parameters only. Preset
-management, voice classification, confidence scores, LUFS, a separate de-esser
-and AI claims from the reference are not simulated.
+MATALE_CHROMIUM_PATH selects an installed Chromium for tests;
+MATALE_SCREENSHOTS selects a persistent screenshot folder. The chat has no
+supported public preview URL. This launcher opens the browser on your machine.
 
-## For development (full source package)
-
-From Web: `npm ci`, `npm run build`, `npm run test:dsp`, `npm run test:session`.
-For full browser automation install Chromium using `npx playwright install
-chromium` and run `npm run test:browser`. An existing Chromium can be selected
-with MATALE_CHROMIUM_PATH; MATALE_SCREENSHOTS can retain screenshots. Native
-platform packaging is deferred until browser review is complete.
+VST3 / Standalone / AU release builds remain deferred until browser review.

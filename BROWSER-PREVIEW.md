@@ -1,15 +1,27 @@
-# Matale Tune browser preview
+# Matale Tune browser preview — 0.3.0
 
-Open the `MataleTune-Browser` folder after downloading/extracting this repository.
+Download/extract this repository ZIP and open `MataleTune-Browser`.
 
 - Windows: run `Start-Browser-Windows.bat`.
-- macOS: run `python3 Start-Browser.py` in that folder.
-- Python 3 is required. No npm installation is needed for this prebuilt preview.
+- macOS/Linux: run `python3 Start-Browser.py` in that folder.
+- Python 3 is required. No npm installation is needed for the prebuilt preview.
 - Choose Vocal file or Mic input. Wear headphones before enabling Monitor.
 
-Full editable source is included in `MataleTune-Browser/dist/MataleTune_Source.zip`.
-The same source can be downloaded using the running browser application's Source
-section. See `MataleTune-Browser/BROWSER-FIRST.md` for validation and limitations.
+## New working features
 
-This is the browser review package. New native VST3 / Standalone / AU releases
-are deferred until browser review is complete.
+Rotary knobs only (drag, keyboard and double-click reset); preset selection,
+Save/export and Import; independent A/B snapshots; real Vocal Smooth, Harsh
+control, Warmth, Presence and De-Esser processing; six processing stage switches;
+Auto inclusion and per-stage analysis; live measured pitch confidence/range,
+register estimate, RMS energy, spectrum/waveform, momentary LUFS, L/R and peak
+hold; applied audio settings.
+
+The editable project is now directly available in `project/`. A complete source
+ZIP is also included at `MataleTune-Browser/dist/MataleTune_Source.zip` and can
+be downloaded through the running app. See `project/docs/BROWSER-FEATURES.md`
+for implementation details and executed validation.
+
+New vocal processing currently runs in a browser AudioWorklet extension after
+the original portable WASM chain. Native plugin parity and VST3 / Standalone /
+AU release builds are deferred until browser review is complete. Browser tests
+use synthetic audio; please check real vocal listening and hardware locally.

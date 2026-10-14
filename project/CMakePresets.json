@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {"name":"tests","generator":"Unix Makefiles","binaryDir":"${sourceDir}/build-tests","cacheVariables":{"MATALE_BUILD_PLUGIN":"OFF","CMAKE_BUILD_TYPE":"Release"}},
+    {"name":"mac-arm64","generator":"Unix Makefiles","binaryDir":"${sourceDir}/build-mac-arm64","cacheVariables":{"CMAKE_BUILD_TYPE":"Release","CMAKE_OSX_ARCHITECTURES":"arm64","CMAKE_OSX_DEPLOYMENT_TARGET":"11.0"}},
+    {"name":"mac-universal","inherits":"mac-arm64","binaryDir":"${sourceDir}/build-mac-universal","cacheVariables":{"CMAKE_OSX_ARCHITECTURES":"arm64;x86_64"}},
+    {"name":"win-x64","generator":"Visual Studio 17 2022","architecture":"x64","binaryDir":"${sourceDir}/build-win"}
+  ]
+}
