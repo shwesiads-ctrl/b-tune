@@ -18,7 +18,7 @@
 -- Exporting juceaide
 -- Testing juceaide
 -- Finished setting up juceaide
--- Configuring done (107.4s)
+-- Configuring done (95.3s)
 -- Generating done (0.1s)
 -- Build files have been written to: D:/a/b-tune/b-tune/build-native
 
@@ -102,8 +102,8 @@ D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\ju
   
   juce_gui_basics.cpp
   juce_graphics.cpp
-  MataleTune_vst3_helper.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleTune_vst3_helper.exe
   juce_graphics_Harfbuzz.cpp
+  MataleTune_vst3_helper.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleTune_vst3_helper.exe
   juce_events.cpp
   juce_core.cpp
   juce_core_CompilationTime.cpp
@@ -155,31 +155,31 @@ Test project D:/a/b-tune/b-tune/build-native
       Start  2: yin
  2/10 Test  #2: yin ..............................   Passed    0.03 sec
       Start  3: scale
- 3/10 Test  #3: scale ............................   Passed    0.00 sec
+ 3/10 Test  #3: scale ............................   Passed    0.01 sec
       Start  4: shift
  4/10 Test  #4: shift ............................   Passed    0.03 sec
       Start  5: dynamics
- 5/10 Test  #5: dynamics .........................   Passed    0.06 sec
+ 5/10 Test  #5: dynamics .........................   Passed    0.04 sec
       Start  6: effects
- 6/10 Test  #6: effects ..........................   Passed    0.07 sec
+ 6/10 Test  #6: effects ..........................   Passed    0.06 sec
       Start  7: auto
- 7/10 Test  #7: auto .............................   Passed    0.01 sec
+ 7/10 Test  #7: auto .............................   Passed    0.00 sec
       Start  8: stress
  8/10 Test  #8: stress ...........................   Passed    0.06 sec
       Start  9: realtime
- 9/10 Test  #9: realtime .........................   Passed    0.06 sec
+ 9/10 Test  #9: realtime .........................   Passed    0.07 sec
       Start 10: native-processor
-10/10 Test #10: native-processor .................   Passed    0.68 sec
+10/10 Test #10: native-processor .................   Passed    0.64 sec
 
 100% tests passed, 0 tests failed out of 10
 
-Total Test time (real) =   1.17 sec
+Total Test time (real) =   1.10 sec
 
 
 ## pluginval.log
 
 Started validating: D:\a\b-tune\b-tune\build-native\MataleTune_artefacts\Release\VST3\Matale Tune.vst3
-Random seed: 0xd129e9
+Random seed: 0x5714c70
 Validation started
 Strictness level: 5
 -----------------------------------------------------------------
@@ -187,7 +187,7 @@ Starting tests in: pluginval / Scan for plugins located in: D:\a\b-tune\b-tune\b
 Num plugins found: 1
 
 Testing plugin: VST3-Matale Tune-10cbe618-fcf59f7a
-Matale Audio: Matale Tune v0.9.0
+Matale Audio: Matale Tune v0.9.1
 Completed tests in pluginval / Scan for plugins located in: D:\a\b-tune\b-tune\build-native\MataleTune_artefacts\Release\VST3\Matale Tune.vst3
 -----------------------------------------------------------------
 Starting tests in: pluginval / Open plugin (cold)...
