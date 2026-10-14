@@ -1,6 +1,6 @@
 import definitions from './parameters.json';
-export type Extras = { smooth: number; harsh: boolean; warmth: number; presence: number; deess: number; deessHz: number; deessThreshold: number };
-export const extraDefaults: Extras = { smooth: 0, harsh: true, warmth: 0, presence: 0, deess: 0, deessHz: 6000, deessThreshold: -28 };
+export type Extras = { denoise: number; noiseThreshold: number; smooth: number; harsh: boolean; warmth: number; presence: number; deess: number; deessHz: number; deessThreshold: number };
+export const extraDefaults: Extras = { denoise: 0, noiseThreshold: -45, smooth: 0, harsh: true, warmth: 0, presence: 0, deess: 0, deessHz: 6000, deessThreshold: -28 };
 export const stageNames = ['pitch', 'dynamics', 'eq', 'deesser', 'reverb', 'delay'] as const;
 export type Stage = typeof stageNames[number];
 export type Stages = Record<Stage, boolean>;
@@ -36,6 +36,7 @@ export function parsePreset(raw: unknown): Preset {
     if (typeof v !== 'number' || !Number.isFinite(v) || v < lo || v > hi) throw new Error('Invalid vocal setting: ' + k);
     extras[k] = v;
   }
+  for(const [key,lo,hi] of [['denoise',0,100],['noiseThreshold',-72,-12]] as const){const v=p.extras[key];if(v!==undefined){if(typeof v!=='number'||!Number.isFinite(v)||v<lo||v>hi)throw new Error('Invalid vocal setting: '+key);extras[key]=v;}}
   const stages = { ...defaultStages };
   for (const k of stageNames) {
     if (!p.stages || typeof p.stages[k] !== 'boolean') throw new Error('Missing processing stage: ' + k);

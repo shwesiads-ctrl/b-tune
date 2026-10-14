@@ -123,7 +123,7 @@ try {
   const download=await downloading;const preset=JSON.parse(await readFile(await download.path(),'utf8'));
   assert.equal(preset.name,'Regression Vocal');assert.equal(preset.format,'matale-tune');
   assert(await page.evaluate(()=>JSON.parse(localStorage.getItem('matale-presets-v1')).some(p=>p.name==='Regression Vocal')));
-  preset.name='Imported Vocal';preset.params[7]=62;preset.extras.deess=71;
+  preset.name='Imported Vocal';preset.params[7]=62;preset.extras.deess=71;delete preset.extras.denoise;delete preset.extras.noiseThreshold; // Existing presets migrate to bypassed denoise.
   const importFile=page.locator('input[accept="application/json,.json"]');
   await importFile.setInputFiles({name:'vocal.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(preset))});
   await page.waitForFunction(()=>document.querySelector('footer')?.textContent.includes('Imported preset: Imported Vocal'));
@@ -147,6 +147,7 @@ try {
   await page.getByRole('button',{name:'Mic input',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('footer')?.textContent.includes('Microphone live'));
   assert(await page.locator('.wave-label').textContent().then(s=>s.includes('48 kHz')));
+  await page.getByRole('button',{name:'Home',exact:true}).click();
   await page.getByRole('button',{name:'Detect Key',exact:true}).click();await page.getByRole('button',{name:'Finish key capture',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('.key-results')?.textContent.includes('Not enough melodic evidence'));
   console.log('PASS: live key capture finishes and rejects insufficient melodic evidence');
@@ -202,8 +203,17 @@ try {
   assert(measured.notes.some(n=>Math.abs(n.midi-(originalNote+1))<.3),'Downloaded edited WAV did not contain the changed note pitch');
   assert(Math.abs(pcm.length/renderRate-totalFrames/rate)<.001,'Edited WAV changed clip duration');
   await page.getByRole('button',{name:'Preview edited',exact:true}).click();await page.waitForFunction(()=>document.querySelector('footer')?.textContent.includes('note preview looping'));
-  assert(await livePitch.isDisabled(),'Note preview must bypass realtime correction to preserve deliberate edits');
+  assert(await page.locator('.live-pitch-toggle').isDisabled(),'Note preview must bypass realtime correction to preserve deliberate edits');
+  assert.equal(await page.locator('.realtime-panel').isVisible(),false,'Note Editor must hide unrelated realtime panel');
+  assert.equal(await page.locator('.analysis-grid').isVisible(),false,'Note Editor must hide unrelated analysis');
   await page.getByRole('button',{name:'Stop',exact:true}).click();await page.getByRole('button',{name:'Home',exact:true}).click();
+  await page.getByRole('button',{name:'Denoise',exact:true}).click();
+  assert(await page.getByRole('region',{name:'Denoise controls',exact:true}).isVisible());
+  assert.equal(await page.locator('.realtime-panel').isVisible(),false);
+  const denoise=page.getByRole('spinbutton',{name:'Denoise amount',exact:true});await denoise.press('End');assert.equal(await denoise.getAttribute('aria-valuenow'),'100');
+  await page.getByRole('button',{name:'Bypass denoise',exact:true}).click();assert.equal(await denoise.getAttribute('aria-valuenow'),'0');
+  await page.getByRole('button',{name:'Effects',exact:true}).click();assert.equal(await page.locator('.analysis-grid').isVisible(),false);assert.equal(await page.locator('.realtime-panel').isVisible(),false);
+  await page.getByRole('button',{name:'Home',exact:true}).click();
   await page.setViewportSize({width:2880,height:1600});
   assert(await page.evaluate(()=>document.querySelector('.workspace').getBoundingClientRect().right>innerWidth-40),'Workspace leaves a large blank area on wide screens');
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));

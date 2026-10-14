@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { VocalTools } from '../public/vocal-tools.js';
+import { VocalTools, VocalDenoise } from '../public/vocal-tools.js';
 function render(hz,settings={},enabled=true,rate=48000,amplitude=.1) {
   const fx=new VocalTools(rate);fx.set(settings,enabled);let sum=0,original=0;
   for(let n=0;n<rate;n++) {
@@ -34,3 +34,12 @@ assert(tone.peakHold>0);tone.resetPeak();assert.equal(tone.peakHold,0);
 console.log('PASS: silence, observed note range, honest register gating and peak reset');
 
 const stereo=new VocalTools(48000);for(let i=0;i<24000;i++){stereo.observeInput(.3,.1);stereo.process(.3,.1);}const levels=stereo.snapshot(0);assert(Math.abs(levels.left-.3)<1e-8);assert(Math.abs(levels.right-.1)<1e-8);console.log('PASS: independent real L/R peak meters');
+
+for(const rate of [44100,48000,96000]){
+ function run(amplitude,settings,enabled=true){const gate=new VocalDenoise(rate);gate.set(settings,enabled);let sum=0;for(let i=0;i<rate;i++){const x=amplitude*Math.sin(2*Math.PI*440*i/rate),gain=gate.process(x,x);assert(Number.isFinite(gain));if(i>rate/2)sum+=gain*gain;}return Math.sqrt(sum/(rate/2-1));}
+ assert(run(.001,{denoise:100,noiseThreshold:-45})<.1,'Quiet noise must be attenuated');
+ assert(run(.1,{denoise:100,noiseThreshold:-45})>.99,'Voiced level must open gate');
+ assert.equal(run(.001,{denoise:0}),1,'Zero amount must bypass exactly');
+ assert.equal(run(.001,{denoise:100},false),1,'Master bypass must bypass denoise');
+ console.log('PASS: denoise quiet attenuation, voice opening and exact bypass at',rate);
+}

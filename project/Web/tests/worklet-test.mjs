@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import assert from 'node:assert/strict';
-import { VocalTools } from '../public/vocal-tools.js';
+import { VocalTools, VocalDenoise } from '../public/vocal-tools.js';
 let Processor;const messages=[];
 const bytes=readFileSync(new URL('../public/matale-dsp.wasm',import.meta.url));
 const module=await WebAssembly.compile(bytes);
 runInNewContext(readFileSync(new URL('../public/matale-worklet.js',import.meta.url),'utf8').replace(/^import .*;\n/, ''),{
-  VocalTools,
+  VocalTools, VocalDenoise,
   AudioWorkletProcessor:class {constructor(){this.port={postMessage:m=>messages.push(structuredClone(m))};}},
   registerProcessor:(name,c)=>{Processor=c;},
   sampleRate:48000,WebAssembly,Float32Array,Error

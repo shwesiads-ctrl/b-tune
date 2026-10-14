@@ -29,7 +29,7 @@ export default function NoteEditor({active,buffer,fileName,root,scale,onLoad,onK
   async function preview(){const audio=wav??await render();if(audio)onPreview(audio,'Edited vocal preview');}
   function download(){if(!wav)return;const url=URL.createObjectURL(new Blob([wav],{type:'audio/wav'})),a=document.createElement('a');a.href=url;a.download=(fileName.replace(/\.[^.]+$/,'')||'vocal')+'-edited.wav';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   const current=notes.find(n=>n.id===selected),duration=analysis?.duration??buffer?.duration??1;
-  const pitches=notes.flatMap(n=>[Math.round(n.midi),n.target]);const low=Math.min(48,...pitches)-3,high=Math.max(72,...pitches)+3,rows=high-low+1,height=Math.max(360,rows*17);
+  const pitches=notes.flatMap(n=>[Math.round(n.midi),n.target]);const low=notes.length?Math.min(...pitches)-2:48,high=notes.length?Math.max(...pitches)+2:72,rows=high-low+1,height=Math.max(360,rows*17);
   return <section ref={panel} className="panel note-editor" aria-label="Vocal note editor"><div className="panel-heading"><div><h2>Vocal Note Editor</h2><p>Independent monophonic pitch editing · up to 120 seconds · timing retained</p></div><button onClick={onLoad}>Load vocal file</button></div>
     <p className="editor-file">{buffer?fileName+' · '+buffer.duration.toFixed(2)+' s · '+(buffer.sampleRate/1000)+' kHz':'No vocal file loaded'}</p>
     <p className="editor-status" role="status" aria-live="polite">{message}</p>

@@ -136,3 +136,9 @@ Vocal playback now shows elapsed / total time with a live progress bar, Pause / 
 Browser 0.4.3 fixes a global 130px CSS cap on the vocal playback progress bar. The timeline now fills its panel and uses a consistent green / blue fill in Chromium and Firefox.
 
 Browser 0.4.4 adds click-to-seek on the full playback timeline. Tab to the timeline and use Left/Right for 5-second jumps, Home for the beginning and End for the end. Seeking preserves the paused/playing state. Effect controls remain rotary knobs.
+
+### Browser 0.5.0 — compact tabs and Denoise
+
+Only Home shows the full analysis dashboard. Pitch shows its musical target and realtime controls; Dynamics, EQ and Effects show their own controls. Settings and Note Editor hide unrelated dashboard panels. The header, navigation and playback transport are more compact.
+
+The Denoise tab provides rotary Amount and Threshold controls for a stereo-linked downward expander before the shared pitch/effects engine. It attenuates quiet background noise between phrases, with a 2ms opening envelope and 120ms release; it does not separate noise underneath a singing voice. Amount 0 and master bypass preserve the dry input. Start low and lower the threshold if soft words are cut. Denoise defaults to bypass; older presets remain compatible and new presets / A–B snapshots retain these controls.

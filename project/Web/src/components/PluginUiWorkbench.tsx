@@ -197,6 +197,7 @@ export default function PluginUiWorkbench() {
       source.connect(inputGain);
       if(playback)(source as AudioBufferSourceNode).start();
       session.current = { context: ctx, node, analyser, gain, source, stream, inputGain, editing, kind: mode, playback }; creating.current = null;
+      if(playback)setPlayback({position:0,duration:playback.buffer.duration,paused:false});
       node.onprocessorerror = () => {
         if (session.current?.node !== node) return;
         void stop();
@@ -303,7 +304,7 @@ export default function PluginUiWorkbench() {
   const meterPercent = (v: number) => Math.max(0, Math.min(100, (Number(level(v)) + 60) / 60 * 100));
   return <main className="app-shell" style={{zoom:uiScale}}>
     <header className="app-header">
-      <div className="brand"><b>M</b><div><h1>Matale Tune</h1><small>Pro Vocal Processor · Browser 0.4.4</small></div></div>
+      <div className="brand"><b>M</b><div><h1>Matale Tune</h1><small>Pro Vocal Processor · Browser 0.5.0</small></div></div>
       <div className="header-right">
         <label className="preset-select">Preset<select aria-label="Preset" value={presetId} onChange={e=>{
           const id=e.target.value;const preset=id.startsWith('builtin:')?builtIns[Number(id.slice(8))]:savedPresets.find(p=>p.name===id.slice(6));
@@ -317,8 +318,8 @@ export default function PluginUiWorkbench() {
           <span className="dot" />{params[3] ? 'Processing on' : 'Bypassed'}</button></div>
     </header>
     <aside className="sidebar"><small>VOCAL TOOLS</small><nav aria-label="Vocal processors">
-      {['Home', 'Pitch', 'Dynamics', 'EQ', 'Effects', 'Settings', 'Note Editor'].map((name, i) => <button key={name} aria-pressed={tab === i - 1} onClick={() => setTab(i - 1)}>
-        <span aria-hidden="true">{['⌂', '〰', '≋', '☷', '✧', '⚙', '♬'][i]}</span>{name}</button>)}
+      {['Home', 'Pitch', 'Dynamics', 'EQ', 'Effects', 'Settings', 'Note Editor', 'Denoise'].map((name, i) => <button key={name} aria-pressed={tab === i - 1} onClick={() => setTab(i - 1)}>
+        <span aria-hidden="true">{['⌂', '〰', '≋', '☷', '✧', '⚙', '♬', '◌'][i]}</span>{name}</button>)}
       </nav><div className="sidebar-foot"><span className={'dot ' + (active ? 'live' : '')} />{active ? 'Engine running' : 'Engine stopped'}<small>2048-frame DSP latency</small></div>
     </aside>
     <div className="workspace">
@@ -334,14 +335,14 @@ export default function PluginUiWorkbench() {
         }} /> Monitor · headphones</label>
       </section>
       <section className="panel vocal-progress" aria-label="Vocal playback progress"><div><b>{session.current?.editing?'Edited / original preview':'Vocal playback'}</b><span>{playback.duration?clock(playback.position)+' / '+clock(playback.duration):active?'Live microphone · no file timeline':'Load a vocal file to begin'}</span></div><div className="playback-timeline"><progress aria-label="Vocal progress" max={playback.duration||1} value={playback.position}/><button className="timeline-seek" aria-label="Seek vocal timeline" disabled={!playback.duration} title="Click to seek · ← / →: 5 seconds · Home: start · End: end" onClick={e=>{const box=e.currentTarget.getBoundingClientRect();if(e.detail)transport((e.clientX-box.left)/box.width*playback.duration);}} onKeyDown={e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();transport(e.key==='Home'?0:e.key==='End'?playback.duration:playback.position+(e.key==='ArrowRight'?5:-5));}}}/></div><div className="transport-actions"><button disabled={!playback.duration} onClick={()=>transport(0)}>Restart vocal</button><button disabled={!playback.duration} onClick={()=>transport(playback.position-10)}>−10 s</button><button disabled={!playback.duration} onClick={()=>transport()}>{playback.paused?'Resume vocal':'Pause vocal'}</button><button disabled={!playback.duration} onClick={()=>transport(playback.position+10)}>+10 s</button><small>Click timeline to seek · ← / →: 5 s · file playback loops</small></div></section>
-      <section className="musical-target" aria-label="Musical target">{selectors()}<button className="detect-key" disabled={busy||keyBusy||(!loadedAudio&&!active)} onClick={()=>void detectVocalKey()}>{keyBusy?'Detecting…':keyListening?'Finish key capture':'Detect Key'}</button><button onClick={()=>setTab(5)}>Open Note Editor</button></section>
-      {keyListening&&<p className="key-message">Listening for melody notes · capture finishes after 10 seconds, or press Finish key capture.</p>}
-      {keyResult&&<section className="key-results" aria-label="Detected key candidates"><div><b>{keyResult.candidates.length?(keyResult.ambiguous?'Possible keys · ambiguous melody':'Detected key candidates'):'Not enough melodic evidence'}</b><p>{keyResult.reason}</p></div>{keyResult.candidates.map(k=><button key={k.root+k.mode} onClick={()=>applyKey(k.root,k.mode)} aria-label={'Apply '+choices[0][k.root]+' '+k.mode}>{choices[0][k.root]} {k.mode}<small>Profile score {k.score.toFixed(2)} · Apply</small></button>)}</section>}
-      <section className="panel realtime-panel" aria-label="Vocal realtime control"><div className="realtime-heading"><div><h2><span>◉</span> Vocal Realtime Control</h2><p>{active?'Change a knob while singing or playing a file. The active engine updates immediately.':'Start Mic input or Vocal file to hear these controls in realtime.'}</p></div><button className="live-pitch-toggle" role="switch" aria-label="Realtime Auto Pitch" aria-checked={stages.pitch&&!session.current?.editing} disabled={!!session.current?.editing} onClick={()=>toggleStage('pitch')}>Auto Pitch · {session.current?.editing?'Preview bypass':stages.pitch?'On':'Off'}</button></div>
+      <section hidden={![ -1,0,5].includes(tab)} className="musical-target" aria-label="Musical target">{selectors()}<button className="detect-key" disabled={busy||keyBusy||(!loadedAudio&&!active)} onClick={()=>void detectVocalKey()}>{keyBusy?'Detecting…':keyListening?'Finish key capture':'Detect Key'}</button><button onClick={()=>setTab(5)}>Open Note Editor</button></section>
+      {[-1,0,5].includes(tab)&&keyListening&&<p className="key-message">Listening for melody notes · capture finishes after 10 seconds, or press Finish key capture.</p>}
+      {[-1,0].includes(tab)&&keyResult&&<section className="key-results" aria-label="Detected key candidates"><div><b>{keyResult.candidates.length?(keyResult.ambiguous?'Possible keys · ambiguous melody':'Detected key candidates'):'Not enough melodic evidence'}</b><p>{keyResult.reason}</p></div>{keyResult.candidates.map(k=><button key={k.root+k.mode} onClick={()=>applyKey(k.root,k.mode)} aria-label={'Apply '+choices[0][k.root]+' '+k.mode}>{choices[0][k.root]} {k.mode}<small>Profile score {k.score.toFixed(2)} · Apply</small></button>)}</section>}
+      <section hidden={tab!==-1&&tab!==0} className="panel realtime-panel" aria-label="Vocal realtime control"><div className="realtime-heading"><div><h2><span>◉</span> Vocal Realtime Control</h2><p>{active?'Change a knob while singing or playing a file. The active engine updates immediately.':'Start Mic input or Vocal file to hear these controls in realtime.'}</p></div><button className="live-pitch-toggle" role="switch" aria-label="Realtime Auto Pitch" aria-checked={stages.pitch&&!session.current?.editing} disabled={!!session.current?.editing} onClick={()=>toggleStage('pitch')}>Auto Pitch · {session.current?.editing?'Preview bypass':stages.pitch?'On':'Off'}</button></div>
         <div className="realtime-knobs"><Knob label="Input gain" min={-24} max={24} step={.5} initial={0} value={inputGainDb} text={inputGainDb.toFixed(1)+' dB'} onChange={setInputGainDb} />{control(7,true,'Realtime correction')}{control(4,true,'Realtime retune')}{control(5,true,'Realtime humanize')}{control(33,true,'Output gain')}<Knob label="Realtime monitor level" min={0} max={100} step={1} initial={70} value={monitorVolume} text={monitorVolume+'%'} onChange={setMonitorVolume}/></div>
         <div className="realtime-caption"><span className={'dot '+(active?'live':'')} />{active?(session.current?.editing?'Note preview: realtime Auto Pitch bypassed to retain note edits.':stages.pitch?'Realtime pitch correction follows the selected key / scale.':'Realtime pitch correction is off; the other vocal effects remain available.'):'Audio engine stopped. Settings are ready for your next input.'}<small>Voiced notes only · breaths/noise can show no pitch · use headphones for monitoring.</small></div>
       </section>
-      <div className="analysis-grid">
+      <div hidden={tab!==-1} className="analysis-grid">
         <section className="panel analysis"><div className="panel-heading"><h2><span>≋</span> Vocal Analysis</h2><span className={'live-pill ' + (active ? 'live' : '')}><i />{active ? 'Live' : 'Idle'}</span></div>
           <div className="analysis-body"><div className={'note-ring ' + (meter.pitch ? 'voiced' : '')}><strong>{note}</strong><small>{meter.pitch ? meter.pitch.toFixed(1) + ' Hz' : 'No voiced pitch'}</small></div>
             <dl className="analysis-stats"><div><dt>Detected note</dt><dd>{note}</dd></div>
@@ -381,7 +382,7 @@ export default function PluginUiWorkbench() {
           {i===3?extraControl('deess','De-Esser'):control([7,8,23,0,31,28][i],true,['Pitch','Dynamics','EQ','De-Esser','Reverb','Delay'][i])}
           <button className="stage-auto" disabled={!active||analysing} aria-label={'Auto '+stage} onClick={()=>runAuto(stage)}>Auto</button>
         </div>)}</section>
-      </> : tab!==5&&<section className="panel rack"><div className="panel-heading"><h2>{tab===4?'Audio & interface settings':tabs[tab]}</h2><span className="tag">MANUAL CONTROLS</span></div>
+      </> : tab!==5&&tab!==6&&<section className="panel rack"><div className="panel-heading"><h2>{tab===4?'Audio & interface settings':tabs[tab]}</h2><span className="tag">MANUAL CONTROLS</span></div>
         {tab === 0 && <><svg viewBox="0 0 1000 120" role="img" aria-label="Detected pitch history"><polyline points={points} fill="none" stroke="#1685ff" strokeWidth="2" /></svg><small>Live pitch history · Formant is a dual-band colour filter.</small></>}
         {tab === 2 && <><canvas ref={eq} width="1000" height="150" aria-label="EQ response curve" /><small>20 Hz → 20 kHz · centre line 0 dB</small></>}
         {tab===4?<div className="settings-grid">
@@ -394,10 +395,11 @@ export default function PluginUiWorkbench() {
           <p>Sample rate / latency preferences apply when you start the next input. Device and browser latency are additional.</p><p>Knobs: drag up/down, use arrow keys, or double-click to reset. Shift-drag gives finer control.</p></div>
         </div>:<div className="rack-controls">{definitions.map((p, i) => p.page === tab && i > 3 ? control(i) : null)}{tab===1&&<>{extraControl('deess','De-Esser amount')}{extraControl('deessHz','Sibilance frequency',3000,10000,100,' Hz')}{extraControl('deessThreshold','De-Esser threshold',-48,-6,1,' dB')}</>}</div>}
       </section>}
+      {tab===6&&<section className="panel denoise-panel" aria-label="Denoise controls"><h2>Denoise</h2><p>Reduce quiet background noise between vocal phrases using a stereo-linked noise gate.</p><div className="rack-controls">{extraControl('denoise','Denoise amount')}{extraControl('noiseThreshold','Noise threshold',-72,-12,1,' dB')}</div><p>Start with a low amount. Raise the threshold until pauses are quieter; lower it if soft words disappear. This gate does not remove noise underneath singing.</p><button onClick={()=>changeExtra('denoise',0)}>Bypass denoise</button></section>}
       <div hidden={tab!==5}><NoteEditor active={tab===5} buffer={loadedAudio} fileName={sourceFile?.name??''} root={params[0]} scale={params[1]} onLoad={()=>file.current?.click()} onKey={setKeyResult} onPreview={previewEdited} onOriginal={()=>sourceFile&&void start('file',sourceFile,true)}/></div>
       <dialog ref={saveDialog} onCancel={()=>setShowSave(false)} onClose={()=>setShowSave(false)} className="save-dialog"><form onSubmit={e=>{e.preventDefault();savePreset();}}><h2>Save vocal preset</h2><p>Save in this browser and download a portable JSON file.</p><label>Preset name<input autoFocus required aria-label="Preset name" value={saveName} maxLength={80} onChange={e=>setSaveName(e.target.value)} /></label><div><button type="button" onClick={()=>setShowSave(false)}>Cancel</button><button type="submit">Save preset</button></div></form></dialog>
       <footer role="status"><span className={active ? 'dot live' : 'dot'} />{status}{analysing && <progress value={meter.progress} max="1" />}</footer>
-      <details><summary>Help, source and licenses</summary><p>Matale Tune Browser 0.4.4 · <a href="/LICENSE.txt" target="_blank" rel="noreferrer">MIT project license</a> · <a href="/THIRD-PARTY-NOTICES.txt" target="_blank" rel="noreferrer">Third-party notices</a></p><p>Audio stays in your browser. Shared C++ DSP runs through WebAssembly, followed by the browser vocal processing stage.</p>
+      <details><summary>Help, source and licenses</summary><p>Matale Tune Browser 0.5.0 · <a href="/LICENSE.txt" target="_blank" rel="noreferrer">MIT project license</a> · <a href="/THIRD-PARTY-NOTICES.txt" target="_blank" rel="noreferrer">Third-party notices</a></p><p>Audio stays in your browser. Shared C++ DSP runs through WebAssembly, followed by the browser vocal processing stage.</p>
         <p><a href="/MataleTune_Source.zip" download>Download source/build scripts</a> · <button onClick={async () => {
           try { const r = await fetch('/VocalDSP.h'); if (!r.ok) throw new Error('Source unavailable'); setSourceCode(await r.text()); }
           catch { setSourceCode('Source is in Source/VocalDSP.h in the package.'); }

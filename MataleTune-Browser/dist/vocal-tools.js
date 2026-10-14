@@ -123,3 +123,11 @@ export class VocalTools {
     this.inputSum=this.inputN=this.inputPeak=this.leftPeak=this.rightPeak=0;return result;
   }
 }
+
+// Stereo-linked downward expansion. Reduces quiet noise between phrases;
+// it does not separate noise from a voice while both are sounding.
+export class VocalDenoise {
+  constructor(sr){this.envelope=0;this.gain=1;this.amount=0;this.threshold=-45;this.enabled=true;this.attack=1-Math.exp(-1/(sr*.002));this.release=1-Math.exp(-1/(sr*.12));}
+  set(values={},enabled=true){this.amount=clamp(Number.isFinite(values.denoise)?values.denoise:0,0,100);this.threshold=clamp(Number.isFinite(values.noiseThreshold)?values.noiseThreshold:-45,-72,-12);this.enabled=enabled;}
+  process(l,r){const peak=Math.max(Math.abs(l),Math.abs(r));this.envelope+=(peak>this.envelope?this.attack:this.release)*(peak-this.envelope);const below=Math.min(0,db(this.envelope)-this.threshold);const target=this.enabled?10**(Math.max(-48,below*2)*this.amount/100/20):1;this.gain+=(target>this.gain?this.attack:this.release)*(target-this.gain);return this.amount===0||!this.enabled?1:this.gain;}
+}
