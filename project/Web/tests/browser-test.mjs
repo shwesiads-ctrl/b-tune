@@ -171,6 +171,7 @@ try {
   await page.getByRole('button',{name:'Note Editor',exact:true}).click();
   await page.locator('.vocal-note').first().waitFor(); // Editor analyses automatically on open.
   const timeline=page.getByRole('progressbar',{name:'Vocal progress',exact:true});
+  assert(await timeline.evaluate(el=>el.getBoundingClientRect().width>=el.parentElement.getBoundingClientRect().width-50),'Playback progress must span the panel rather than inherit the 130px global cap');
   await page.waitForFunction(()=>Number(document.querySelector('progress[aria-label="Vocal progress"]').value)>0);
   await page.getByRole('button',{name:'Pause vocal',exact:true}).click();
   const paused=await timeline.getAttribute('value');await page.waitForTimeout(350);assert.equal(await timeline.getAttribute('value'),paused,'Pause freezes the playback timeline');
