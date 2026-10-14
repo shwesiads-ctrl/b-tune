@@ -82,7 +82,7 @@ candidate to apply it. Detection does not overwrite your key automatically.
 
 This is original project code, **not Celemony Melodyne**, and includes no
 Celemony code, plugin, license or proprietary algorithm. The editor currently
-supports mono/stereo monophonic vocal clips up to 120 seconds, pitch edits up
+supports mono/stereo monophonic vocal clips up to 10 minutes, pitch edits up
 to one octave and fixed timing. It does not provide polyphonic separation,
 formant-preserving resynthesis, detailed vibrato editing or note timing edits.
 WAV export contains the note edits only; current realtime effects are applied
@@ -131,7 +131,7 @@ license. Browser React dependencies and toolchain notices are documented in
 
 ### Browser 0.4.2
 
-Vocal playback now shows elapsed / total time with a live progress bar, Pause / Resume, Restart and ±10-second buttons (no sliders). Opening Note Editor automatically analyses the loaded vocal and scrolls to the piano roll. Status and errors appear above the notes. Preview edited renders the current edits automatically before playback; Export WAV becomes available after rendering. Mono/stereo note editing still supports clips up to 120 seconds; use a clean solo vocal.
+Vocal playback now shows elapsed / total time with a live progress bar, Pause / Resume, Restart and ±10-second buttons (no sliders). Opening Note Editor automatically analyses the loaded vocal and scrolls to the piano roll. Status and errors appear above the notes. Preview edited renders the current edits automatically before playback; Export WAV becomes available after rendering. Mono/stereo note editing still supports clips up to 10 minutes; use a clean solo vocal.
 
 Browser 0.4.3 fixes a global 130px CSS cap on the vocal playback progress bar. The timeline now fills its panel and uses a consistent green / blue fill in Chromium and Firefox.
 
@@ -142,3 +142,11 @@ Browser 0.4.4 adds click-to-seek on the full playback timeline. Tab to the timel
 Only Home shows the full analysis dashboard. Pitch shows its musical target and realtime controls; Dynamics, EQ and Effects show their own controls. Settings and Note Editor hide unrelated dashboard panels. The header, navigation and playback transport are more compact.
 
 The Denoise tab provides rotary Amount and Threshold controls for a stereo-linked downward expander before the shared pitch/effects engine. It attenuates quiet background noise between phrases, with a 2ms opening envelope and 120ms release; it does not separate noise underneath a singing voice. Amount 0 and master bypass preserve the dry input. Start low and lower the threshold if soft words are cut. Denoise defaults to bypass; older presets remain compatible and new presets / A–B snapshots retain these controls.
+
+### Browser 0.6.0
+
+- Note Editor and Detect Key process vocals up to 10 minutes in 30-second analysis jobs, with progress and cancellation. The full file is retained; rendering accepts mono/stereo and at most 60 million total channel samples to bound memory. A sustained note crossing a job boundary can appear as adjacent notes. Long-file time labels are spaced automatically.
+- Playback seeking stays transparent on hover, press and focus so the progress fill remains visible.
+- Presets still apply on selection, with an explicit Apply preset button to reapply the selected preset and a visible operation status. Warm and Bright presets include more distinct EQ/dynamics settings. Existing saved presets retain their original compressor mode.
+- EQ has a dark interactive response graph with five draggable band nodes and rotary controls for the selected band. The existing frequency ranges, gain and Q remain connected to the shared audio engine.
+- The original Opto Leveling Compressor offers Peak Reduction, Gain, Compress/Limit and measured gain reduction. It uses an RMS detector and a two-timescale release; the standard compressor remains selectable. Opto mode bypasses the shared compressor to avoid double processing. This is not a FabFilter or LA-2A product or an exact circuit emulation.

@@ -68,7 +68,7 @@ class Shifter {
 export function renderNotes(channels,sr,notes) {
   if(!Array.isArray(channels)||!channels.length||channels.length>2||!channels.every(c=>c instanceof Float32Array&&c.length===channels[0].length))throw new Error('A mono or stereo vocal file is required.');
   const length=channels[0].length;
-  if(!(sr>=8000&&sr<=192000)||length/sr>120)throw new Error('Note rendering supports clips up to 120 seconds.');
+  if(!(sr>=8000&&sr<=192000)||length/sr>600||length*channels.length>60000000)throw new Error('Note rendering supports up to 10 minutes and 60 million channel samples.');
   const edits=notes.filter(n=>n.edited).sort((a,b)=>a.start-b.start);
   for(const n of edits)if(!Number.isFinite(n.start)||!Number.isFinite(n.end)||!Number.isFinite(n.midi)||!Number.isFinite(n.target)||n.start<0||n.end<=n.start||n.end>length/sr+.01||Math.abs(n.target-n.midi)>12.5)throw new Error('Invalid note edit or shift beyond one octave.');
   if(!edits.length)return channels.map(c=>new Float32Array(c));

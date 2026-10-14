@@ -131,3 +131,10 @@ export class VocalDenoise {
   set(values={},enabled=true){this.amount=clamp(Number.isFinite(values.denoise)?values.denoise:0,0,100);this.threshold=clamp(Number.isFinite(values.noiseThreshold)?values.noiseThreshold:-45,-72,-12);this.enabled=enabled;}
   process(l,r){const peak=Math.max(Math.abs(l),Math.abs(r));this.envelope+=(peak>this.envelope?this.attack:this.release)*(peak-this.envelope);const below=Math.min(0,db(this.envelope)-this.threshold);const target=this.enabled?10**(Math.max(-48,below*2)*this.amount/100/20):1;this.gain+=(target>this.gain?this.attack:this.release)*(target-this.gain);return this.amount===0||!this.enabled?1:this.gain;}
 }
+
+// Original opto-style envelope compressor, not a circuit model of branded hardware.
+export class VocalOpto {
+  constructor(sr){this.energy=0;this.reduction=0;this.slow=0;this.threshold=-18;this.makeup=0;this.limit=false;this.enabled=false;this.detector=1-Math.exp(-1/(sr*.01));this.attack=1-Math.exp(-1/(sr*.01));this.fast=1-Math.exp(-1/(sr*.06));this.tail=1-Math.exp(-1/(sr*2));}
+  set(params,extras,enabled){this.enabled=!!extras.opto&&enabled&&params[9]>1;this.threshold=params[8];this.makeup=params[12];this.limit=!!extras.limit;}
+  process(l,r){this.energy+=this.detector*((l*l+r*r)*.5-this.energy);const wanted=this.enabled?Math.max(0,db(Math.sqrt(this.energy))-this.threshold)*(this.limit?.95:.75):0;this.slow+=this.tail*(wanted-this.slow);const target=Math.max(wanted,this.slow*.5);this.reduction+=(target>this.reduction?this.attack:this.fast)*(target-this.reduction);return this.enabled?10**((this.makeup-this.reduction)/20):1;}
+}

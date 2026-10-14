@@ -22,3 +22,7 @@ assert.equal(detectKey([]).candidates.length,0);assert.equal(analyzeVocal(new Fl
 assert.throws(()=>renderNotes([sine(220,48000)],48000,[{start:0,end:1,midi:57,target:90,edited:true}]),/octave/);
 assert.equal(midiToHz(69),440);
 console.log('PASS: C-major key profile, insufficient-evidence gating, silence and invalid edits');
+
+const longRate=8000,longVocal=new Float32Array(longRate*246),late=sine(220,longRate,1);longVocal.set(late,longRate*240);
+const longRender=renderNotes([longVocal],longRate,[{id:0,start:240,end:241,midi:57,target:59,edited:true,confidence:1}])[0];
+assert.equal(longRender.length,longVocal.length);assert(analyzeVocal(longRender.slice(longRate*240.3,longRate*240.9),longRate).notes.some(n=>Math.abs(n.midi-59)<.3));console.log('PASS: note edit after 240 seconds and full 246-second render');

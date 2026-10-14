@@ -14,7 +14,7 @@ export default function NoteEditor({active,buffer,fileName,root,scale,onLoad,onK
   const attempted=useRef<AudioBuffer|null>(null),panel=useRef<HTMLElement|null>(null);
   useEffect(()=>{if(active){panel.current?.scrollIntoView?.({behavior:'smooth',block:'start'});if(buffer&&attempted.current!==buffer){attempted.current=buffer;void analyse();}}},[active,buffer]);
   async function analyse(){if(!buffer)return;job.current?.abort();const token=++generation.current,controller=new AbortController();job.current=controller;setBusy(true);setMessage('Detecting monophonic notes in a background worker…');
-    try{const result=await analyzeBuffer(buffer,controller.signal);if(token!==generation.current)return;setAnalysis(result);setNotes(result.notes);setSelected(result.notes[0]?.id??null);setPast([]);setFuture([]);setWav(null);onKey(result.key);setMessage(result.notes.length?result.notes.length+' notes detected. Select or drag a note to change its pitch.':'No stable vocal notes detected. Try a clean solo vocal.');}
+    try{const result=await analyzeBuffer(buffer,controller.signal,p=>{if(token===generation.current)setMessage('Detecting notes… '+Math.round(p*100)+'%');});if(token!==generation.current)return;setAnalysis(result);setNotes(result.notes);setSelected(result.notes[0]?.id??null);setPast([]);setFuture([]);setWav(null);onKey(result.key);setMessage(result.notes.length?result.notes.length+' notes detected. Select or drag a note to change its pitch.':'No stable vocal notes detected. Try a clean solo vocal.');}
     catch(e){if(token===generation.current)setMessage(e instanceof Error?e.message:'Note analysis failed.');}finally{if(token===generation.current)setBusy(false);}
   }
   function update(next:VocalNote[]){setPast(p=>[...p.slice(-29),notes.map(n=>({...n}))]);setFuture([]);setNotes(next);setWav(null);}
@@ -28,9 +28,10 @@ export default function NoteEditor({active,buffer,fileName,root,scale,onLoad,onK
   }
   async function preview(){const audio=wav??await render();if(audio)onPreview(audio,'Edited vocal preview');}
   function download(){if(!wav)return;const url=URL.createObjectURL(new Blob([wav],{type:'audio/wav'})),a=document.createElement('a');a.href=url;a.download=(fileName.replace(/\.[^.]+$/,'')||'vocal')+'-edited.wav';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  const tickStep=Math.max(1,Math.ceil((analysis?.duration??buffer?.duration??1)/20));
   const current=notes.find(n=>n.id===selected),duration=analysis?.duration??buffer?.duration??1;
   const pitches=notes.flatMap(n=>[Math.round(n.midi),n.target]);const low=notes.length?Math.min(...pitches)-2:48,high=notes.length?Math.max(...pitches)+2:72,rows=high-low+1,height=Math.max(360,rows*17);
-  return <section ref={panel} className="panel note-editor" aria-label="Vocal note editor"><div className="panel-heading"><div><h2>Vocal Note Editor</h2><p>Independent monophonic pitch editing · up to 120 seconds · timing retained</p></div><button onClick={onLoad}>Load vocal file</button></div>
+  return <section ref={panel} className="panel note-editor" aria-label="Vocal note editor"><div className="panel-heading"><div><h2>Vocal Note Editor</h2><p>Independent monophonic pitch editing · up to 10 minutes · timing retained</p></div><button onClick={onLoad}>Load vocal file</button></div>
     <p className="editor-file">{buffer?fileName+' · '+buffer.duration.toFixed(2)+' s · '+(buffer.sampleRate/1000)+' kHz':'No vocal file loaded'}</p>
     <p className="editor-status" role="status" aria-live="polite">{message}</p>
     <p>1. Load / analyse → 2. Drag notes or turn the pitch knob → 3. Preview edited (renders automatically) → 4. Export WAV</p>
@@ -39,7 +40,7 @@ export default function NoteEditor({active,buffer,fileName,root,scale,onLoad,onK
       {busy&&<button onClick={()=>{generation.current++;job.current?.abort();setBusy(false);setMessage('Operation cancelled.');}}>Cancel operation</button>}</div>
     <div className="editor-scroll"><div className="piano-roll" style={{height,minWidth:Math.max(760,Math.min(3000,duration*90))}} aria-label="Detected vocal notes">
       {Array.from({length:rows},(_,i)=>{const m=high-i;return <div className={'piano-row '+([1,3,6,8,10].includes((m%12+12)%12)?'black-note':'')} key={m} style={{top:i/rows*100+'%',height:100/rows+'%'}}><span>{name(m)}</span></div>;})}
-      <div className="note-time-axis">{Array.from({length:Math.ceil(duration)+1},(_,i)=><span key={i} style={{left:i/duration*100+'%'}}>{i}s</span>)}</div>
+      <div className="note-time-axis">{Array.from({length:Math.floor(duration/tickStep)+1},(_,i)=><span key={i} style={{left:i*tickStep/duration*100+'%'}}>{i*tickStep}s</span>)}</div>
       {notes.map(n=><button key={n.id} className={'vocal-note '+(selected===n.id?'selected ':'')+(n.edited?'edited':'')} aria-label={'Note '+(n.id+1)+' '+name(n.target)} aria-pressed={selected===n.id} disabled={busy}
         style={{left:`calc(48px + (100% - 56px) * ${n.start/duration})`,width:`calc((100% - 56px) * ${(n.end-n.start)/duration})`,top:(high-n.target)/rows*100+'%',height:100/rows+'%'}}
         onClick={()=>setSelected(n.id)} onPointerDown={e=>{if(e.button!==0)return;setSelected(n.id);e.currentTarget.setPointerCapture(e.pointerId);drag.current={id:n.id,y:e.clientY,target:n.target};}}

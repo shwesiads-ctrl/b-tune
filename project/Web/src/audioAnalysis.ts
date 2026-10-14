@@ -10,14 +10,24 @@ function runJob<T>(payload:unknown,transfer:Transferable[],signal?:AbortSignal):
     worker.postMessage(payload,transfer);
   });
 }
-export function analyzeBuffer(buffer:AudioBuffer,signal?:AbortSignal) {
-  if(buffer.duration>120)throw new Error('Note/key analysis supports clips up to 120 seconds. Trim the vocal first.');
-  const samples=new Float32Array(buffer.length);
-  for(let c=0;c<buffer.numberOfChannels;c++){const channel=buffer.getChannelData(c);for(let i=0;i<samples.length;i++)samples[i]+=channel[i]/buffer.numberOfChannels;}
-  return runJob<AnalysisResult>({type:'analyze',samples,rate:buffer.sampleRate},[samples.buffer],signal);
+export async function analyzeBuffer(buffer:AudioBuffer,signal?:AbortSignal,onProgress?:(fraction:number)=>void) {
+  if(buffer.duration>600)throw new Error('Use a vocal up to 10 minutes for note/key analysis.');
+  const frames:AnalysisResult['frames']=[],notes:VocalNote[]=[];
+  const chunk=Math.round(buffer.sampleRate*30);
+  for(let start=0;start<buffer.length;start+=chunk){
+    if(signal?.aborted)throw new DOMException('Audio operation cancelled.','AbortError');
+    const length=Math.min(chunk,buffer.length-start),samples=new Float32Array(length);
+    for(let c=0;c<buffer.numberOfChannels;c++){const channel=buffer.getChannelData(c);for(let i=0;i<length;i++)samples[i]+=channel[start+i]/buffer.numberOfChannels;}
+    const result=await runJob<AnalysisResult>({type:'analyze',samples,rate:buffer.sampleRate},[samples.buffer],signal),offset=start/buffer.sampleRate;
+    frames.push(...result.frames.map(f=>({...f,time:f.time+offset})));
+    for(const n of result.notes)notes.push({...n,id:notes.length,start:n.start+offset,end:n.end+offset});
+    onProgress?.(Math.min(1,(start+length)/buffer.length));
+  }
+  const key=await keyFromFrames(frames,signal);
+  return {frames,notes,key,duration:buffer.duration};
 }
 export function renderBuffer(buffer:AudioBuffer,notes:VocalNote[],signal?:AbortSignal) {
-  if(buffer.duration>120||buffer.numberOfChannels>2)throw new Error('Use a mono/stereo vocal clip up to 120 seconds for note editing.');
+  if(buffer.duration>600||buffer.numberOfChannels>2||buffer.length*buffer.numberOfChannels>60000000)throw new Error('Use a mono/stereo vocal up to 10 minutes and 60 million channel samples for rendering.');
   const channels=Array.from({length:Math.min(2,buffer.numberOfChannels)},(_,i)=>new Float32Array(buffer.getChannelData(i)));
   return runJob<{channels:Float32Array[];wav:ArrayBuffer}>({type:'render',channels,rate:buffer.sampleRate,notes},channels.map(c=>c.buffer),signal);
 }

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { VocalTools, VocalDenoise } from '../public/vocal-tools.js';
+import { VocalTools, VocalDenoise, VocalOpto } from '../public/vocal-tools.js';
 function render(hz,settings={},enabled=true,rate=48000,amplitude=.1) {
   const fx=new VocalTools(rate);fx.set(settings,enabled);let sum=0,original=0;
   for(let n=0;n<rate;n++) {
@@ -42,4 +42,10 @@ for(const rate of [44100,48000,96000]){
  assert.equal(run(.001,{denoise:0}),1,'Zero amount must bypass exactly');
  assert.equal(run(.001,{denoise:100},false),1,'Master bypass must bypass denoise');
  console.log('PASS: denoise quiet attenuation, voice opening and exact bypass at',rate);
+}
+
+for(const rate of [44100,48000,96000]){
+ const run=(limit=false,enabled=true)=>{const fx=new VocalOpto(rate),params=Array(34).fill(0);params[8]=-24;params[9]=4;params[12]=0;fx.set(params,{opto:true,limit},enabled);let gain=1;for(let i=0;i<rate;i++)gain=fx.process(.2,.2);return {gain,fx};};
+ const compress=run();assert(compress.gain<.5,'Opto must attenuate a loud vocal');assert(run(true).gain<compress.gain,'Limit must reduce more than Compress');assert.equal(run(false,false).gain,1,'Master bypass must bypass opto');
+ const fx=compress.fx;for(let i=0;i<rate*4;i++)fx.process(0,0);assert(fx.reduction<2,'Opto release must recover');console.log('PASS: opto compression, limit, bypass and recovery at',rate);
 }

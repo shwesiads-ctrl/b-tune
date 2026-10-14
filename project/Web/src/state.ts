@@ -1,6 +1,6 @@
 import definitions from './parameters.json';
-export type Extras = { denoise: number; noiseThreshold: number; smooth: number; harsh: boolean; warmth: number; presence: number; deess: number; deessHz: number; deessThreshold: number };
-export const extraDefaults: Extras = { denoise: 0, noiseThreshold: -45, smooth: 0, harsh: true, warmth: 0, presence: 0, deess: 0, deessHz: 6000, deessThreshold: -28 };
+export type Extras = { opto:boolean; limit:boolean; denoise: number; noiseThreshold: number; smooth: number; harsh: boolean; warmth: number; presence: number; deess: number; deessHz: number; deessThreshold: number };
+export const extraDefaults: Extras = { opto:true, limit:false, denoise: 0, noiseThreshold: -45, smooth: 0, harsh: true, warmth: 0, presence: 0, deess: 0, deessHz: 6000, deessThreshold: -28 };
 export const stageNames = ['pitch', 'dynamics', 'eq', 'deesser', 'reverb', 'delay'] as const;
 export type Stage = typeof stageNames[number];
 export type Stages = Record<Stage, boolean>;
@@ -31,6 +31,7 @@ export function parsePreset(raw: unknown): Preset {
   const ranges = { smooth: [0, 100], warmth: [-100, 100], presence: [-100, 100], deess: [0, 100], deessHz: [3000, 10000], deessThreshold: [-48, -6] };
   if (!p.extras || typeof p.extras.harsh !== 'boolean') throw new Error('Missing vocal settings.');
   extras.harsh = p.extras.harsh;
+  for(const key of ['opto','limit'] as const){const v=p.extras[key];if(v!==undefined&&typeof v!=='boolean')throw new Error('Invalid compressor mode.');extras[key]=v??false;}
   for (const k of Object.keys(ranges) as (keyof typeof ranges)[]) {
     const v = p.extras[k], [lo, hi] = ranges[k];
     if (typeof v !== 'number' || !Number.isFinite(v) || v < lo || v > hi) throw new Error('Invalid vocal setting: ' + k);
@@ -50,7 +51,7 @@ function builtIn(name: string, changes: Record<number, number>, extra: Partial<E
 }
 export const builtIns: Preset[] = [
   builtIn('Natural Vocal', {}, { smooth: 20, deess: 25 }),
-  builtIn('Warm Vocal', { 4: 55, 5: 45, 31: .08 }, { smooth: 35, warmth: 25, deess: 35 }),
-  builtIn('Bright Vocal', { 31: .1, 28: .07 }, { smooth: 15, presence: 20, deess: 45 }),
+  builtIn('Warm Vocal', { 4: 55, 5: 45, 8:-24, 12:2, 17:2, 31: .08 }, { smooth: 35, warmth: 25, deess: 35 }),
+  builtIn('Bright Vocal', { 8:-22, 12:2, 23:3, 31: .1, 28: .07 }, { smooth: 15, presence: 20, deess: 45 }),
   builtIn('Hard Tune', { 2: 1, 4: 1, 5: 0, 7: 100, 9: 4 }, { smooth: 10, deess: 30 })
 ];

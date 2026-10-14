@@ -1,4 +1,4 @@
-# Matale Tune source — 0.4.1
+# Matale Tune source — 0.6.0
 
 Original vocal-processing code under the MIT license; dependency licenses are
 retained. See LICENSE and THIRD_PARTY.md. The ready-to-run browser package is
@@ -31,7 +31,7 @@ the portable C++ DSP. Do not open index.html directly.
 - The large AUTO button performs a separate three-second setup analysis.
 
 The independent note editor is not Celemony Melodyne. It supports monophonic
-mono/stereo clips up to 120 seconds and one-octave pitch edits with fixed
+mono/stereo clips up to 10 minutes and one-octave pitch edits with fixed
 timing. Realtime Auto Pitch is bypassed on editor previews; export contains
 note edits only. There is no polyphonic or formant-preservation claim.
 
@@ -66,3 +66,11 @@ It verifies files/readiness and automatically falls back to a free port.
 Use `python3 Start-Browser.py --port 0` to request a free port explicitly.
 Keep the extracted build folder in place while the server runs.
 Launcher regression checks: `python3 Tests/LauncherTests.py`.
+
+### Browser 0.6.0
+
+- Note Editor and Detect Key process vocals up to 10 minutes in 30-second analysis jobs, with progress and cancellation. The full file is retained; rendering accepts mono/stereo and at most 60 million total channel samples to bound memory. A sustained note crossing a job boundary can appear as adjacent notes. Long-file time labels are spaced automatically.
+- Playback seeking stays transparent on hover, press and focus so the progress fill remains visible.
+- Presets still apply on selection, with an explicit Apply preset button to reapply the selected preset and a visible operation status. Warm and Bright presets include more distinct EQ/dynamics settings. Existing saved presets retain their original compressor mode.
+- EQ has a dark interactive response graph with five draggable band nodes and rotary controls for the selected band. The existing frequency ranges, gain and Q remain connected to the shared audio engine.
+- The original Opto Leveling Compressor offers Peak Reduction, Gain, Compress/Limit and measured gain reduction. It uses an RMS detector and a two-timescale release; the standard compressor remains selectable. Opto mode bypasses the shared compressor to avoid double processing. This is not a FabFilter or LA-2A product or an exact circuit emulation.

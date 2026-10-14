@@ -1,4 +1,4 @@
-import { VocalTools, VocalDenoise } from './vocal-tools.js';
+import { VocalTools, VocalDenoise, VocalOpto } from './vocal-tools.js';
 // Audio processing never runs on React's/main UI thread.
 class MataleProcessor extends AudioWorkletProcessor {
   constructor(options) {
@@ -18,6 +18,7 @@ class MataleProcessor extends AudioWorkletProcessor {
     this.ticks = 0;
     this.tools = new VocalTools(sampleRate);
     this.denoise = new VocalDenoise(sampleRate);
+    this.opto = new VocalOpto(sampleRate);
     this.extras = {}; this.processing = true;
     this.meter = { pitch: 0, input: 0, output: 0, progress: 0 };
     this.port.onmessage = ({ data }) => {
@@ -27,7 +28,7 @@ class MataleProcessor extends AudioWorkletProcessor {
       if (data.params) this.processing = data.params[3] > .5;
       this.tools.set(this.extras, this.processing);
       this.denoise.set(this.extras, this.processing);
-      if (data.params) for (let i = 0; i < data.params.length; i++) this.e.mt_set(i, data.params[i]);
+      if (data.params){this.opto.set(data.params,this.extras,this.processing);for(let i=0;i<data.params.length;i++)this.e.mt_set(i,this.opto.enabled&&(i===9||i===12)?(i===9?1:0):data.params[i]);}
     };
   }
   process(inputs, outputs) {
@@ -40,6 +41,7 @@ class MataleProcessor extends AudioWorkletProcessor {
     }
     for (let i=0;i<128;i++) this.tools.observeInput(this.l[i],this.r[i]);
     for(let i=0;i<128;i++){const gain=this.denoise.process(this.l[i],this.r[i]);this.l[i]*=gain;this.r[i]*=gain;}
+    for(let i=0;i<128;i++){const gain=this.opto.process(this.l[i],this.r[i]);this.l[i]*=gain;this.r[i]*=gain;}
     this.e.mt_process();
     for (let i=0;i<128;i++) { this.tools.process(this.l[i],this.r[i]);this.l[i]=this.tools.left;this.r[i]=this.tools.right; }
     output[0].set(this.l);
@@ -48,6 +50,7 @@ class MataleProcessor extends AudioWorkletProcessor {
       this.meter.pitch = this.e.mt_pitch(); this.meter.input = this.e.mt_input();
       this.meter.output = this.e.mt_output(); this.meter.progress = this.e.mt_progress();
       Object.assign(this.meter,this.tools.snapshot(this.meter.pitch));
+      this.meter.compressionReduction=this.opto.enabled?this.opto.reduction:0;
       this.port.postMessage(this.meter);
     }
     const ready = this.e.mt_auto_ready();

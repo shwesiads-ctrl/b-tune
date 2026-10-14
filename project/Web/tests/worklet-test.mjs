@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import assert from 'node:assert/strict';
-import { VocalTools, VocalDenoise } from '../public/vocal-tools.js';
+import { VocalTools, VocalDenoise, VocalOpto } from '../public/vocal-tools.js';
 let Processor;const messages=[];
 const bytes=readFileSync(new URL('../public/matale-dsp.wasm',import.meta.url));
 const module=await WebAssembly.compile(bytes);
 runInNewContext(readFileSync(new URL('../public/matale-worklet.js',import.meta.url),'utf8').replace(/^import .*;\n/, ''),{
-  VocalTools, VocalDenoise,
+  VocalTools, VocalDenoise, VocalOpto,
   AudioWorkletProcessor:class {constructor(){this.port={postMessage:m=>messages.push(structuredClone(m))};}},
   registerProcessor:(name,c)=>{Processor=c;},
   sampleRate:48000,WebAssembly,Float32Array,Error
@@ -37,3 +37,6 @@ if(process.argv[2]){
  console.log('Native/WASM parity peak:',peak,'RMS:',Math.sqrt(energy/n));
  assert(peak<.001,'Native / WASM output differs by >= .001');
 }
+
+function measureOpto(makeup=0,enabled=true){const q=new Processor({processorOptions:{module}}),v=defaults.map(p=>p.initial);v[7]=0;v[8]=-24;v[9]=4;v[12]=makeup;v[3]=enabled?1:0;q.port.onmessage({data:{params:v,extras:{opto:true}}});let sum=0,n=0;for(let block=0;block<450;block++){for(let i=0;i<128;i++)a[i]=b[i]=.2*Math.sin(2*Math.PI*220*(block*128+i)/48000);q.process([[a,b]],[[left,right]]);if(block>350)for(const x of left){sum+=x*x;n++;}}return Math.sqrt(sum/n);}
+const optoOutput=measureOpto();assert(optoOutput<measureOpto(0,false)*.6,'Worklet must actually engage opto reduction');assert(Math.abs(20*Math.log10(measureOpto(6)/optoOutput)-6)<.1,'Opto gain must apply once, not twice through WASM');console.log('PASS: real worklet opto engagement, master bypass and single makeup gain');
