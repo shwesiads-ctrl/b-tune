@@ -8,8 +8,12 @@ and an independent monophonic note editor.**
 
 **Native product direction:** VST3/AU will use the compact four-panel vocal
 processor; Standalone will include the full workbench. See
-[product scope](PRODUCT-SCOPE.md). These native profiles are planned, not yet
-implemented in the current browser release.
+[product scope](PRODUCT-SCOPE.md). The compact native processor/editor is now implemented as a 0.8.0 DAW preview;
+Windows binary build status is published separately. The full native Standalone
+application remains planned; the browser workbench remains available.
+
+[Windows VST3 build status / download](https://github.com/shwesiads-ctrl/b-tune/tree/daw-preview-windows) ·
+[DAW installation and test guide](project/docs/DAW-TESTING.md)
 
 ![Matale Tune browser interface](MataleTune-Browser/Preview.png)
 
@@ -165,3 +169,21 @@ With Auto detect key enabled and Chromatic selected, Auto evaluates the captured
 Opto compression adds a 6 dB soft knee, program-dependent two-stage release, adjustable 20–250 Hz sidechain high-pass and parallel Mix. EQ adds a local bypass, selected-band reset and full EQ reset. All remain real audio controls.
 
 A stereo-linked output safety limiter uses 128 samples of lookahead and a −0.45 dBFS sample-peak ceiling, with an 80 ms release. It preserves stereo ratios and meters measure its actual output. Settings exposes its switch and reduction. Enabled processing adds 128 samples to the shared 2048-sample DSP delay (2176 total; browser/device latency is additional). Master bypass remains dry. This is sample-peak protection, not true-peak mastering. Older presets load with default sidechain/mix/safety values.
+
+## Native 0.8.0 DAW preview
+
+VST3/AU share a compact four-panel JUCE editor: Vocal Analysis, Output, Auto
+Mode and Vocal Smooth. Native Auto measures dry stereo audio, estimates key
+when sufficiently clear, and applies included pitch/EQ/opto compression,
+smoothing, de-essing, quiet-noise gating and restrained effects. State includes
+the native vocal controls and Auto inclusions. Auto result application runs on
+the processor's message-thread timer even with the editor closed. The native
+audio path allocates no memory after preparation and reports 2176 samples
+including its stereo-linked safety lookahead; native bypass stays aligned.
+
+The Windows workflow builds with MSVC x64, runs core/actual JUCE tests and
+pluginval strictness 5, then publishes a native ZIP and SHA-256 to the
+`daw-preview-windows` branch. A failed run publishes logs/status, not a new ZIP.
+A build/status page is not proof of success: check its source revision and
+success state before downloading. The ZIP is for DAW testing, with real host
+compatibility and listening still to be verified by users.

@@ -84,3 +84,12 @@ With Auto detect key enabled and Chromatic selected, Auto evaluates the captured
 Opto compression adds a 6 dB soft knee, program-dependent two-stage release, adjustable 20–250 Hz sidechain high-pass and parallel Mix. EQ adds a local bypass, selected-band reset and full EQ reset. All remain real audio controls.
 
 A stereo-linked output safety limiter uses 128 samples of lookahead and a −0.45 dBFS sample-peak ceiling, with an 80 ms release. It preserves stereo ratios and meters measure its actual output. Settings exposes its switch and reduction. Enabled processing adds 128 samples to the shared 2048-sample DSP delay (2176 total; browser/device latency is additional). Master bypass remains dry. This is sample-peak protection, not true-peak mastering. Older presets load with default sidechain/mix/safety values.
+
+## Native 0.8.0 DAW preview
+
+The native compact four-panel editor, dry-input Auto/key and native vocal stages
+are implemented. See [native build](docs/NATIVE-BUILD.md),
+[validation boundaries](docs/NATIVE-VALIDATION.md) and
+[Windows DAW testing](docs/DAW-TESTING.md). The full native Standalone is not
+included; the browser workbench remains available. Windows build status and
+downloads are published on the repository's `daw-preview-windows` branch.

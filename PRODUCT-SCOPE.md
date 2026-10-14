@@ -1,8 +1,9 @@
 # Matale Tune product scope
 
-User-approved direction for future native builds. The current browser preview
-remains the full workbench; this document does not claim that native builds
-already implement these profiles.
+User-approved product direction. The native 0.8.0 processor/editor implements
+the compact profile for DAW preview builds. Windows build/validation status is
+published separately. The browser remains the full workbench; native Standalone
+with the full workbench is still planned.
 
 ## VST3 and AU: compact vocal processor
 
