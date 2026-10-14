@@ -56,7 +56,15 @@ Linux build and all 10 native suites passed. The actual JUCE test opens all five
 Manual pages and changes each of the 48 controls, checking the processor value
 after each change. It checks bounds at 980×620, 1200×720 and 1800×1000, verifies
 rotary sliders, and returns to the compact view. Manual EQ preview is captured.
-Windows results for this revision will be recorded after CI completes.
+Windows run https://github.com/shwesiads-ctrl/b-tune/actions/runs/38614002580
+completed successfully for source `e50b67fbbb1a11b0381e0b18e77fad94067a1d33`.
+MSVC x64 build, all 10 native CTest suites and pluginval 1.0.4 strictness 5
+passed. Both native UI screenshots were captured on Windows. Pluginval GUI
+tests and the separate Steinberg validator remain skipped as in the earlier run.
+The published archive was independently checked for CRC, matching source SHA,
+version 0.9.0 and a PE machine 0x8664 VST3 module. Archive size: 3,688,397 bytes.
+SHA-256: `4e9bbf79c3d119580f7d02e1f3178d67a8e74a6685ee13f7dd92dd5e7edb430d`.
+Binary commit: `56c669cf0bc3919926de2cb592e45300dc45deba`.
 
 The user supplied a Cubase screenshot showing the earlier 0.8.0 VST3 inserted
 and reporting live pitch/meters with Auto applied. Listening quality and project

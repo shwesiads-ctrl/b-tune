@@ -207,3 +207,20 @@ The standalone Steinberg VST3 validator and AU validation were not run. Actual
 DAW insertion/listening/recall remain for the DAW test.
 
 ![Actual Windows compact native editor](Native-Compact-Preview.png)
+
+### Verified Windows 0.9.0 with Manual controls
+
+[Download Windows x64 VST3 0.9.0](https://github.com/shwesiads-ctrl/b-tune/raw/56c669cf0bc3919926de2cb592e45300dc45deba/MataleTune-Windows-x64-VST3.zip)
+(3.69 MB) · [Windows build/test evidence](https://github.com/shwesiads-ctrl/b-tune/actions/runs/38614002580).
+
+Source `e50b67fbbb1a11b0381e0b18e77fad94067a1d33`: Windows MSVC build,
+10 native suites and pluginval strictness 5 passed. The ZIP CRC, matching source,
+PE x64 module and SHA-256 were independently verified after publication.
+SHA-256: `4e9bbf79c3d119580f7d02e1f3178d67a8e74a6685ee13f7dd92dd5e7edb430d`.
+Close the DAW and replace the entire `Matale Tune.vst3` bundle in
+`C:\Program Files\Common Files\VST3\`, then reopen/rescan. Click **Manual controls**
+at the bottom right, choose a page and adjust knobs. **Back to Auto** retains edits.
+The user demonstrated the previous version loading in Cubase; listening and
+project recall of this version remain DAW checks.
+
+![Actual Windows native Manual EQ editor](Native-Manual-Preview.png)
