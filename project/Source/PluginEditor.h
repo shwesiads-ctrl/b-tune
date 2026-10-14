@@ -15,6 +15,21 @@ public:
     void resized() override;
 private:
     MataleTuneAudioProcessor& processor;MataleLookAndFeel look;
+    juce::Component manualPanel;
+    juce::TextButton manualButton{"Manual controls"};
+    juce::ComboBox manualPage;
+    struct ManualControl {
+        int page;
+        std::unique_ptr<juce::Slider> knob;
+        std::unique_ptr<juce::ComboBox> choice;
+        std::unique_ptr<juce::ToggleButton> toggle;
+        std::unique_ptr<juce::Label> label;
+    };
+    std::vector<ManualControl> manualControls;
+    std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment>> choices;
+    bool manualOpen=false;
+    void showManual(bool);
+    void layoutManual();
     juce::TextButton autoButton{"AUTO"},peakReset{"Reset peak"};
     juce::ToggleButton power{"On"},harsh{"Harsh control"},autoKey{"Auto detect key (Chromatic only)"};
     std::array<juce::ToggleButton,7> includes;

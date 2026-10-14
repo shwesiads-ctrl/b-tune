@@ -1,4 +1,4 @@
-# Native 0.8.0 validation record
+# Native validation record
 
 ## Current cloud machine: Linux x86_64
 
@@ -49,3 +49,15 @@ Source: `7671f7b343c52f57de48ea6600d9f2de48157f7d`.
 
 This updates the Windows outcome above. Actual DAW listening/project recall
 and macOS/AU are still unverified.
+
+## Manual controls 0.9.0
+
+Linux build and all 10 native suites passed. The actual JUCE test opens all five
+Manual pages and changes each of the 48 controls, checking the processor value
+after each change. It checks bounds at 980×620, 1200×720 and 1800×1000, verifies
+rotary sliders, and returns to the compact view. Manual EQ preview is captured.
+Windows results for this revision will be recorded after CI completes.
+
+The user supplied a Cubase screenshot showing the earlier 0.8.0 VST3 inserted
+and reporting live pitch/meters with Auto applied. Listening quality and project
+recall were not established by that screenshot; 0.9.0 still needs DAW testing.

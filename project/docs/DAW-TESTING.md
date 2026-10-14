@@ -1,4 +1,4 @@
-# Matale Tune 0.8.0 — Windows x64 VST3 DAW preview
+# Matale Tune 0.9.0 — Windows x64 VST3 DAW preview
 
 This package contains a native Windows plugin, not the browser application.
 The full workbench remains in the browser; native Standalone is not included.
@@ -28,8 +28,9 @@ The full workbench remains in the browser; native Standalone is not included.
    Smooth Amount, Harsh Control, Warmth and Presence remain available as knobs
    or a switch. Additional audio parameters remain exposed to DAW automation.
 
-The plugin editor contains only Vocal Analysis, Output, Auto Mode and Vocal
-Smooth. It does not contain file playback, Note Editor or full manual pages.
+The default plugin editor contains Vocal Analysis, Output, Auto Mode and Vocal
+Smooth. Manual controls opens five parameter pages. File playback and Note
+Editor remain outside the plugin.
 
 ## DAW checks
 
@@ -63,3 +64,19 @@ not separate noise from a voice while singing.
 Original project code is MIT. The binary also includes JUCE and other libraries
 under their own licenses; see the included notices and source. This is not a
 FabFilter, Teletronix or Universal Audio product or an exact circuit emulation.
+
+## Manual controls (0.9.0)
+
+Click **Manual controls** at the bottom right. Choose Pitch / Key, Compressor,
+EQ, Delay / Reverb / Output, or Vocal / Denoise. Knobs update the live processor;
+the number below each knob is editable. Double-click a knob to restore its
+default. **Back to Auto** returns to the four panels without resetting settings.
+All 48 manual controls use the existing host automation/state parameter IDs.
+Opto mode uses its program-dependent attack/release and ratio; disable Opto
+compressor to edit the standard compressor's ratio, attack and release. Host
+tempo takes priority over Fallback tempo when the DAW provides BPM. Auto can
+replace included groups on the next analysis; untick a group to retain its
+manual settings. Key/scale selections other than Chromatic are retained by Auto.
+
+DAW check: change parameters on each page during playback, automate them, save
+and reopen the project, and confirm the values and sound are restored.

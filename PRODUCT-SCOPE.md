@@ -1,6 +1,6 @@
 # Matale Tune product scope
 
-User-approved product direction. The native 0.8.0 processor/editor implements
+User-approved product direction. The native 0.9.0 processor/editor implements
 the compact profile for DAW preview builds. Windows build/validation status is
 published separately. The browser remains the full workbench; native Standalone
 with the full workbench is still planned.
@@ -29,11 +29,15 @@ restricting the interface must not turn them into decorative controls. Retain
 host state restoration, automation and the required bypass/latency behavior.
 Keep key uncertainty visible in Auto's existing status area.
 
-Do not include the full workbench sidebar, file/microphone input selection,
-independent playback/seeking, Note Editor, offline note rendering/WAV export,
-full EQ/compressor/effects editors, standalone settings or browser preset
-file-management pages. No link, including a Manual controls arrow, should open
-these standalone-only pages inside the plugin.
+The user additionally requested Manual controls after testing the compact plugin
+in Cubase. Keep the default four panels and expose a **Manual controls** button
+with five native pages: Pitch/Key, Compressor, EQ, Delay/Reverb/Output and
+Vocal/Denoise. These edit the same automated, saved DSP parameters as Auto.
+Use rotary knobs, named selectors and switches. Back to Auto returns to the
+compact view without resetting edits. The manual view is not the full workbench.
+
+Do not include file/microphone selection, independent playback/seeking, Note
+Editor, offline rendering/export or browser preset file-management pages.
 
 ## Standalone: full workbench
 

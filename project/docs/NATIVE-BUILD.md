@@ -1,4 +1,4 @@
-# Matale Tune 0.8.0 native DAW preview
+# Matale Tune 0.9.0 native DAW preview
 
 ## Windows x64 — recommended download
 
@@ -43,7 +43,7 @@ preview does not claim macOS/AU build or auval verification.
 ## Implemented native profile
 
 - Four panels: Vocal Analysis, Output, Auto Mode and Vocal Smooth. No sidebar,
-  file playback, offline note editor or full manual pages.
+  file playback or offline note editor. Manual controls opens five native parameter pages.
 - Actual stereo dry-input Auto features, bounded adaptive EQ/opto dynamics,
   smoothing/de-essing, usable quiet-floor gating and restrained effects.
 - Raw YIN pitch confidence, observed range and estimated register, live output
@@ -78,3 +78,19 @@ It requires a GUI/message environment (on Linux use an available X display).
 allocations, Auto/key math, mono/stereo LUFS calibration at 44.1/48/96 kHz.
 Local Linux VST3 compilation and these tests verify the implementation; actual
 Windows packaging/validation and real DAW compatibility are separate outcomes.
+
+## Manual controls (0.9.0)
+
+Click **Manual controls** at the bottom right. Choose Pitch / Key, Compressor,
+EQ, Delay / Reverb / Output, or Vocal / Denoise. Knobs update the live processor;
+the number below each knob is editable. Double-click a knob to restore its
+default. **Back to Auto** returns to the four panels without resetting settings.
+All 48 manual controls use the existing host automation/state parameter IDs.
+Opto mode uses its program-dependent attack/release and ratio; disable Opto
+compressor to edit the standard compressor's ratio, attack and release. Host
+tempo takes priority over Fallback tempo when the DAW provides BPM. Auto can
+replace included groups on the next analysis; untick a group to retain its
+manual settings. Key/scale selections other than Chromatic are retained by Auto.
+
+DAW check: change parameters on each page during playback, automate them, save
+and reopen the project, and confirm the values and sound are restored.
