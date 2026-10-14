@@ -1,11 +1,16 @@
 #include "PluginEditor.h"
 namespace {
+#if JUCE_WINDOWS
+const juce::String uiFont="Segoe UI";
+#else
+const juce::String uiFont="DejaVu Sans";
+#endif
 const juce::Colour ink(0xff102d53), muted(0xff607a9c), blue(0xff1685ff), cyan(0xff52d8f5);
 const juce::Colour line(0xffe3edf6), green(0xff13cda0);
 void text(juce::Graphics& g, const juce::String& s, juce::Rectangle<int> bounds,
           float size = 14.f, juce::Colour colour = ink, bool bold = false,
           juce::Justification justify = juce::Justification::centredLeft) {
-    g.setColour(colour); g.setFont(juce::FontOptions(size, bold ? juce::Font::bold : juce::Font::plain));
+    g.setColour(colour); g.setFont(juce::FontOptions(uiFont,size, bold ? juce::Font::bold : juce::Font::plain));
     g.drawText(s, bounds, justify, true);
 }
 void card(juce::Graphics& g, juce::Rectangle<int> bounds) {
@@ -25,6 +30,7 @@ void meter(juce::Graphics& g, juce::Rectangle<float> r, float peak) {
 }
 
 MataleLookAndFeel::MataleLookAndFeel() {
+    setDefaultSansSerifTypefaceName(uiFont);
     setColour(juce::ResizableWindow::backgroundColourId, juce::Colour(0xfff3f8fd));
     setColour(juce::Label::textColourId, ink);
     setColour(juce::Slider::textBoxTextColourId, ink);
