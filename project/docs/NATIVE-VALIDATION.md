@@ -77,4 +77,17 @@ without changing DSP or parameter/state IDs. Minimum interactive size is now
 980×700; default is 1200×760. Existing bounds/manual-binding, state and DSP
 checks passed on Linux: 10 native suites executed, 10 passed. Auto and Manual
 screenshots were inspected for branding, legible values, controls and footer.
-Windows build/validation is pending for this revision.
+Windows run https://github.com/shwesiads-ctrl/b-tune/actions/runs/38617599693
+passed for source `7190afb6c91f881c8a9ae4c98af48e07eee9273a`: MSVC x64 build,
+10/10 native CTest suites and pluginval 1.0.4 strictness 5. Both Auto and Manual
+Windows screenshots were captured; the final Auto screenshot was inspected to
+confirm the logo, credits and consistent Segoe UI typography. Pluginval GUI
+tests and the separate Steinberg validator remain skipped as documented above.
+
+Archive: 3,693,310 bytes. CRC, matching source/version, PE x64 module and SHA-256
+were independently verified. SHA-256:
+`2160861ae9295e6433e028abf168ed8becd34663f061aada5aadd4561522c0a5`.
+Binary commit: `67d5294076d67f1dfd52a89e9b65ea5ca74147d7`.
+The user supplied a screenshot of the earlier version inserted and displaying
+live analysis in FL Studio. Listening quality and DAW recall of 0.9.1 remain
+user-host checks.

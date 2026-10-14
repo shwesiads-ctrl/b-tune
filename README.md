@@ -170,7 +170,9 @@ Opto compression adds a 6 dB soft knee, program-dependent two-stage release, adj
 
 A stereo-linked output safety limiter uses 128 samples of lookahead and a −0.45 dBFS sample-peak ceiling, with an 80 ms release. It preserves stereo ratios and meters measure its actual output. Settings exposes its switch and reduction. Enabled processing adds 128 samples to the shared 2048-sample DSP delay (2176 total; browser/device latency is additional). Master bypass remains dry. This is sample-peak protection, not true-peak mastering. Older presets load with default sidechain/mix/safety values.
 
-## Native 0.9.0 DAW preview
+## Native DAW preview
+
+[Latest Windows VST3: 0.9.1 with branded UI](https://github.com/shwesiads-ctrl/b-tune/raw/67d5294076d67f1dfd52a89e9b65ea5ca74147d7/MataleTune-Windows-x64-VST3.zip)
 
 VST3/AU share a compact four-panel JUCE editor: Vocal Analysis, Output, Auto
 Mode and Vocal Smooth. Native Auto measures dry stereo audio, estimates key
@@ -232,4 +234,20 @@ a permanent header. The footer includes **Make by Myominaung** and
 [Telegram @kominit](https://t.me/kominit), retained in both Auto and Manual views.
 The visual refresh adds shaded rotary knobs, spectrum fill/grid, consistent
 checkboxes and a prominent header Manual button. All parameter IDs and audio
-processing remain unchanged. Windows build validation is pending for this revision.
+processing remain unchanged. Windows MSVC build, all 10 native suites and pluginval strictness 5 passed.
+
+### Verified Windows 0.9.1 branded UI download
+
+[Download Windows x64 VST3 0.9.1](https://github.com/shwesiads-ctrl/b-tune/raw/67d5294076d67f1dfd52a89e9b65ea5ca74147d7/MataleTune-Windows-x64-VST3.zip)
+(3.69 MB) · [Windows build/test evidence](https://github.com/shwesiads-ctrl/b-tune/actions/runs/38617599693).
+
+Source `7190afb6c91f881c8a9ae4c98af48e07eee9273a` includes explicit Segoe UI
+typography for Windows. Native tests passed 10/10 and pluginval strictness 5
+passed. The published ZIP CRC, matching source, SHA-256 and PE x64 module were
+independently checked. SHA-256:
+`2160861ae9295e6433e028abf168ed8becd34663f061aada5aadd4561522c0a5`.
+
+Close the DAW, replace the whole `Matale Tune.vst3` folder in
+`C:\Program Files\Common Files\VST3\`, then reopen/rescan.
+
+![Actual Windows 0.9.1 branded native editor](Native-Compact-Preview.png)
