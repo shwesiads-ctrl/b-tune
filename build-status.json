@@ -1,8 +1,6 @@
 {
-  "state": "success",
-  "sourceSha": "7671f7b343c52f57de48ea6600d9f2de48157f7d",
-  "runId": 38609482052,
-  "runUrl": "https://github.com/shwesiads-ctrl/b-tune/actions/runs/38609482052",
-  "sha256": "e76c3562c7fb2dfd3c97f25521cc2ee1603f99c3a623366cc8d57dc5d8aa256d",
-  "download": "https://github.com/shwesiads-ctrl/b-tune/raw/refs/heads/daw-preview-windows/MataleTune-Windows-x64-VST3.zip"
+  "state": "building",
+  "sourceSha": "e50b67fbbb1a11b0381e0b18e77fad94067a1d33",
+  "runId": 38614002580,
+  "runUrl": "https://github.com/shwesiads-ctrl/b-tune/actions/runs/38614002580"
 }
