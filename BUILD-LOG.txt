@@ -18,7 +18,7 @@
 -- Exporting juceaide
 -- Testing juceaide
 -- Finished setting up juceaide
--- Configuring done (95.3s)
+-- Configuring done (160.6s)
 -- Generating done (0.1s)
 -- Build files have been written to: D:/a/b-tune/b-tune/build-native
 
@@ -34,7 +34,7 @@
   
 D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_Line.h(174,44): warning C4459: declaration of 'line' hides global declaration [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
   (compiling source file '../project/Source/PluginEditor.cpp')
-      D:\a\b-tune\b-tune\project\Source\PluginEditor.cpp(4,20):
+      D:\a\b-tune\b-tune\project\Source\PluginEditor.cpp(9,20):
       see declaration of '`anonymous-namespace'::line'
       D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_Line.h(174,44):
       the template instantiation context (the oldest one first) is
@@ -47,7 +47,7 @@ D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\ju
   
 D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2280,32): warning C4459: declaration of 'line' hides global declaration [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
   (compiling source file '../project/Source/PluginEditor.cpp')
-      D:\a\b-tune\b-tune\project\Source\PluginEditor.cpp(4,20):
+      D:\a\b-tune\b-tune\project\Source\PluginEditor.cpp(9,20):
       see declaration of '`anonymous-namespace'::line'
       D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2280,32):
       the template instantiation context (the oldest one first) is
@@ -60,7 +60,7 @@ D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce
   
 D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_EdgeTable.h(118,24): warning C4459: declaration of 'line' hides global declaration [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
   (compiling source file '../project/Source/PluginEditor.cpp')
-      D:\a\b-tune\b-tune\project\Source\PluginEditor.cpp(4,20):
+      D:\a\b-tune\b-tune\project\Source\PluginEditor.cpp(9,20):
       see declaration of '`anonymous-namespace'::line'
       D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_EdgeTable.h(118,24):
       the template instantiation context (the oldest one first) is
@@ -102,8 +102,8 @@ D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\ju
   
   juce_gui_basics.cpp
   juce_graphics.cpp
-  juce_graphics_Harfbuzz.cpp
   MataleTune_vst3_helper.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleTune_vst3_helper.exe
+  juce_graphics_Harfbuzz.cpp
   juce_events.cpp
   juce_core.cpp
   juce_core_CompilationTime.cpp
@@ -131,9 +131,9 @@ D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\ju
   Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
   Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
   NativeProcessorTests.cpp
-  DSPTests.cpp
   Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
   NativeVocalTests.cpp
+  DSPTests.cpp
   MataleNativeVocalTests.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleNativeVocalTests.exe
   MataleDSPTests.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleDSPTests.exe
 D:\a\b-tune\b-tune\project\Source\VocalDSP.h(168,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data [D:\a\b-tune\b-tune\build-native\MataleNativeProcessorTests.vcxproj]
@@ -151,35 +151,35 @@ D:\a\b-tune\b-tune\project\Source\VocalDSP.h(168,62): warning C4244: '=': conver
 Internal ctest changing into directory: D:/a/b-tune/b-tune/build-native
 Test project D:/a/b-tune/b-tune/build-native
       Start  1: native-vocal
- 1/10 Test  #1: native-vocal .....................   Passed    0.10 sec
+ 1/10 Test  #1: native-vocal .....................   Passed    0.13 sec
       Start  2: yin
  2/10 Test  #2: yin ..............................   Passed    0.03 sec
       Start  3: scale
  3/10 Test  #3: scale ............................   Passed    0.01 sec
       Start  4: shift
- 4/10 Test  #4: shift ............................   Passed    0.03 sec
+ 4/10 Test  #4: shift ............................   Passed    0.05 sec
       Start  5: dynamics
- 5/10 Test  #5: dynamics .........................   Passed    0.04 sec
+ 5/10 Test  #5: dynamics .........................   Passed    0.05 sec
       Start  6: effects
- 6/10 Test  #6: effects ..........................   Passed    0.06 sec
+ 6/10 Test  #6: effects ..........................   Passed    0.08 sec
       Start  7: auto
- 7/10 Test  #7: auto .............................   Passed    0.00 sec
+ 7/10 Test  #7: auto .............................   Passed    0.01 sec
       Start  8: stress
- 8/10 Test  #8: stress ...........................   Passed    0.06 sec
+ 8/10 Test  #8: stress ...........................   Passed    0.08 sec
       Start  9: realtime
  9/10 Test  #9: realtime .........................   Passed    0.07 sec
       Start 10: native-processor
-10/10 Test #10: native-processor .................   Passed    0.64 sec
+10/10 Test #10: native-processor .................   Passed    1.00 sec
 
 100% tests passed, 0 tests failed out of 10
 
-Total Test time (real) =   1.10 sec
+Total Test time (real) =   1.58 sec
 
 
 ## pluginval.log
 
 Started validating: D:\a\b-tune\b-tune\build-native\MataleTune_artefacts\Release\VST3\Matale Tune.vst3
-Random seed: 0x5714c70
+Random seed: 0x1d26dd5
 Validation started
 Strictness level: 5
 -----------------------------------------------------------------
