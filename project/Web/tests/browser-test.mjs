@@ -171,9 +171,16 @@ try {
   await page.getByRole('button',{name:'Note Editor',exact:true}).click();
   await page.locator('.vocal-note').first().waitFor(); // Editor analyses automatically on open.
   const timeline=page.getByRole('progressbar',{name:'Vocal progress',exact:true});
-  assert(await timeline.evaluate(el=>el.getBoundingClientRect().width>=el.parentElement.getBoundingClientRect().width-50),'Playback progress must span the panel rather than inherit the 130px global cap');
+  assert(await timeline.evaluate(el=>el.getBoundingClientRect().width>=el.closest('.vocal-progress').getBoundingClientRect().width-50),'Playback progress must span the panel rather than inherit the 130px global cap');
   await page.waitForFunction(()=>Number(document.querySelector('progress[aria-label="Vocal progress"]').value)>0);
   await page.getByRole('button',{name:'Pause vocal',exact:true}).click();
+  const seek=page.getByRole('button',{name:'Seek vocal timeline',exact:true}),seekBox=await seek.boundingBox();
+  await seek.click({position:{x:seekBox.width*.5,y:seekBox.height/2}});
+  const midpoint=Number(await timeline.getAttribute('max'))/2;
+  assert.ok(Math.abs(Number(await timeline.getAttribute('value'))-midpoint)<.05,'Click seeks to the middle while paused');
+  await seek.press('Home');assert.equal(Number(await timeline.getAttribute('value')),0);
+  await seek.press('ArrowRight');assert.equal(Number(await timeline.getAttribute('value')),5);
+  await seek.press('ArrowLeft');assert.equal(Number(await timeline.getAttribute('value')),0);
   const paused=await timeline.getAttribute('value');await page.waitForTimeout(350);assert.equal(await timeline.getAttribute('value'),paused,'Pause freezes the playback timeline');
   await page.getByRole('button',{name:'Resume vocal',exact:true}).click();
   await page.getByRole('button',{name:'Restart vocal',exact:true}).click();

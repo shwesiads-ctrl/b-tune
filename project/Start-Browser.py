@@ -13,7 +13,7 @@ import urllib.request
 import uuid
 import webbrowser
 
-VERSION = '0.4.3'
+VERSION = '0.4.4'
 REQUIRED = ('index.html', 'matale-dsp.wasm', 'matale-worklet.js',
             'vocal-tools.js', 'note-worker.js', 'pitch-editor.js')
 
