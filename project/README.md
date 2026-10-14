@@ -1,4 +1,4 @@
-# Matale Tune source — 0.6.0
+# Matale Tune source — 0.7.0
 
 Original vocal-processing code under the MIT license; dependency licenses are
 retained. See LICENSE and THIRD_PARTY.md. The ready-to-run browser package is
@@ -74,3 +74,13 @@ Launcher regression checks: `python3 Tests/LauncherTests.py`.
 - Presets still apply on selection, with an explicit Apply preset button to reapply the selected preset and a visible operation status. Warm and Bright presets include more distinct EQ/dynamics settings. Existing saved presets retain their original compressor mode.
 - EQ has a dark interactive response graph with five draggable band nodes and rotary controls for the selected band. The existing frequency ranges, gain and Q remain connected to the shared audio engine.
 - The original Opto Leveling Compressor offers Peak Reduction, Gain, Compress/Limit and measured gain reduction. It uses an RMS detector and a two-timescale release; the standard compressor remains selectable. Opto mode bypasses the shared compressor to avoid double processing. This is not a FabFilter or LA-2A product or an exact circuit emulation.
+
+### Browser 0.7.0 — adaptive Clean Vocal Auto
+
+Auto now measures stereo dry input before denoise, compression and EQ, avoiding feedback from an earlier Auto pass. Three seconds of voiced material produces bounded broad EQ adjustments for rumble/mud/presence/air, opto compression and makeup based on RMS/crest/headroom, de-essing/smoothing and restrained 4% reverb / 2% delay. Included processing stages and master processing are enabled; included pitch returns to Natural style and full correction. Excluded groups and manually selected keys/scales are retained. Resume playback before running Auto.
+
+With Auto detect key enabled and Chromatic selected, Auto evaluates the captured melody and applies only a sufficiently strong, unambiguous major/minor candidate. Ambiguous or insufficient melody asks for Key/Scale or a longer Detect Key pass. A short melody cannot guarantee the key of an entire song; badly clipped/noisy input and polyphonic recordings still require preparation.
+
+Opto compression adds a 6 dB soft knee, program-dependent two-stage release, adjustable 20–250 Hz sidechain high-pass and parallel Mix. EQ adds a local bypass, selected-band reset and full EQ reset. All remain real audio controls.
+
+A stereo-linked output safety limiter uses 128 samples of lookahead and a −0.45 dBFS sample-peak ceiling, with an 80 ms release. It preserves stereo ratios and meters measure its actual output. Settings exposes its switch and reduction. Enabled processing adds 128 samples to the shared 2048-sample DSP delay (2176 total; browser/device latency is additional). Master bypass remains dry. This is sample-peak protection, not true-peak mastering. Older presets load with default sidechain/mix/safety values.

@@ -7,7 +7,7 @@ import type { KeyResult, PitchFrame } from '../../public/pitch-editor.js';
 import { builtIns, parsePreset, clone, effectiveParams, stageNames } from '../state';
 import type { Extras, Snapshot, Preset, Stage } from '../state';
 
-type Meter = { compressionReduction?:number; pitch: number; input: number; output: number; progress: number; confidence?: number; rms?: number; left?: number; right?: number; peak?: number; lufs?: number | null; range?: number[] | null; register?: string; deessReduction?: number; smoothReduction?: number };
+type Meter = { safetyReduction?:number; compressionReduction?:number; pitch: number; input: number; output: number; progress: number; confidence?: number; rms?: number; left?: number; right?: number; peak?: number; lufs?: number | null; range?: number[] | null; register?: string; deessReduction?: number; smoothReduction?: number };
 type AutoScope = Stage | 'all';
 const noteName = (midi: number) => ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'][((midi % 12) + 12) % 12] + (Math.floor(midi / 12) - 1);
 type Session = { context: AudioContext; node: AudioWorkletNode; analyser: AnalyserNode; gain: GainNode; source?: AudioNode; stream?: MediaStream; inputGain?: GainNode; editing?: boolean; kind?: 'mic'|'file'; playback?: {buffer:AudioBuffer;startedAt:number;offset:number;paused:boolean} };
@@ -30,6 +30,9 @@ export default function PluginUiWorkbench() {
   const [slot, setSlot] = useState<'A' | 'B'>('A');
   const slots = useRef({ A: clone(builtIns[0]), B: clone(builtIns[0]) });
   const [autoIncludes, setAutoIncludes] = useState({ pitch: true, dynamics: true, eq: true, smooth: true, deesser: true, reverb: true, delay: true });
+  const [autoKey,setAutoKey]=useState(true),[autoSummary,setAutoSummary]=useState('');
+  const autoKeyValue=useRef(true),autoKeyCapture=useRef<Pick<PitchFrame,'duration'|'midi'|'confidence'>[]|null>(null),autoKeyJob=useRef<AbortController|null>(null);
+  useEffect(()=>{autoKeyValue.current=autoKey;},[autoKey]);
   const autoScope = useRef<AutoScope>('all');
   const autoIncludesRef = useRef(autoIncludes);
   useEffect(()=>{autoIncludesRef.current=autoIncludes;},[autoIncludes]);
@@ -95,7 +98,7 @@ export default function PluginUiWorkbench() {
   function switchSlot(next: 'A' | 'B') { if(next===slot)return; slots.current[slot]=clone({params,extras,stages});applySnapshot(slots.current[next]);setSlot(next);setPresetId('current');setStatus('Comparing snapshot '+next+'.'); }
   function changeExtra(key: keyof Extras, value: number | boolean) { setExtras(old=>({...old,[key]:value}));setPresetId('current'); }
   function toggleStage(stage: Stage) { setStages(old=>({...old,[stage]:!old[stage]}));setPresetId('current'); }
-  function runAuto(scope: AutoScope = 'all') { autoScope.current=scope;setAnalysing(true);setStatus('Listening for three seconds…');session.current?.node.port.postMessage({auto:true}); }
+  function runAuto(scope: AutoScope = 'all') { if(session.current?.playback?.paused){setStatus('Resume vocal playback before Auto.');return;}autoScope.current=scope;if(!values.current[3]){const snapshot=snapshotRef.current,p=effectiveParams(snapshot);p[3]=1;session.current?.node.port.postMessage({params:p,extras:{...snapshot.extras,deess:snapshot.stages.deesser?snapshot.extras.deess:0}});setParams(old=>old.map((v,i)=>i===3?1:v));}setAnalysing(true);setAutoSummary('Listening to the dry input…');autoKeyJob.current?.abort();autoKeyCapture.current=autoKeyValue.current&&(scope==='pitch'||scope==='all'&&autoIncludesRef.current.pitch)&&!session.current?.editing?[]:null;setStatus('Listening for three seconds…');session.current?.node.port.postMessage({auto:true}); }
   async function finishKeyCapture() {
     const capture=keyCapture.current;keyCapture.current=null;setKeyListening(false);if(!capture)return;
     keyJob.current?.abort();const controller=new AbortController();keyJob.current=controller;setKeyBusy(true);
@@ -138,6 +141,7 @@ export default function PluginUiWorkbench() {
   }
   async function stop() {
     generation.current++;
+    autoKeyJob.current?.abort();autoKeyCapture.current=null;
     keyCapture.current=null;keyJob.current?.abort();setKeyListening(false);setKeyBusy(false);
     const s = session.current; session.current = null;
     const pending = creating.current; creating.current = null;
@@ -155,7 +159,7 @@ export default function PluginUiWorkbench() {
   }
   useEffect(() => () => {
     generation.current++;
-    keyJob.current?.abort();
+    keyJob.current?.abort();autoKeyJob.current?.abort();
     session.current?.stream?.getTracks().forEach(t => t.stop());
     void session.current?.context.close();
     void creating.current?.close();
@@ -211,16 +215,22 @@ export default function PluginUiWorkbench() {
           setAnalysing(false);
           if (data.autoResult) {
             const scope=autoScope.current, autoIncludes=autoIncludesRef.current;
-            const group=(i:number): Stage => [4,5].includes(i)?'pitch':[8,12].includes(i)?'dynamics':[17,23].includes(i)?'eq':i===28?'delay':'reverb';
-            setParams(old => { const next = [...old]; for (const [i,value] of data.autoResult) if((scope==='all'&&autoIncludes[group(i)])||scope===group(i)) {const d=definitions[i];next[i]=Number((d.lo+Math.round((Math.max(d.lo,Math.min(d.hi,value))-d.lo)/d.step)*d.step).toFixed(6));} return next; });
+            const group=(i:number): Stage => [2,4,5,7].includes(i)?'pitch':i>=8&&i<=12?'dynamics':i>=13&&i<=27?'eq':i>=28&&i<=30?'delay':'reverb';
+            setStages(old=>{const next={...old};for(const stage of stageNames)if(scope===stage||scope==='all'&&autoIncludes[stage])next[stage]=true;return next;});
+            setParams(old => { const next = [...old];if(scope==='all')next[3]=1; for (const [i,value] of data.autoResult) if((scope==='all'&&autoIncludes[group(i)])||scope===group(i)) {const d=definitions[i];next[i]=Number((d.lo+Math.round((Math.max(d.lo,Math.min(d.hi,value))-d.lo)/d.step)*d.step).toFixed(6));} return next; });
             if(data.extras) setExtras(old=>({...old,
+              ...((scope==='dynamics'||scope==='all'&&autoIncludes.dynamics)?{opto:true,limit:false,optoMix:100,sidechainHz:80,safety:true}:{}),
               ...((scope==='all'&&autoIncludes.smooth)?{smooth:data.extras.smooth,harsh:data.extras.harsh,warmth:data.extras.warmth,presence:data.extras.presence}:{}),
               ...(((scope==='all'&&autoIncludes.deesser)||scope==='deesser')?{deess:data.extras.deess,deessHz:data.extras.deessHz,deessThreshold:data.extras.deessThreshold}:{})}));
             setPresetId('current');
-            setStatus('Auto applied. Key / scale preserved. Adjust to taste.');
-          } else setStatus('Not enough voiced audio. Sing for three seconds and retry.');
+            setStatus('Auto applied. Key / scale preserved. Clean vocal balance is ready.');
+            if(data.autoStats)setAutoSummary('Dry input RMS '+data.autoStats.inputRms.toFixed(1)+' dBFS · crest '+data.autoStats.crest.toFixed(1)+' dB · broad EQ, soft compression and restrained ambience');
+            const frames=autoKeyCapture.current;autoKeyCapture.current=null;
+            if(frames&&values.current[1]===0){const controller=new AbortController();autoKeyJob.current=controller;void keyFromFrames(frames,controller.signal).then(result=>{if(controller.signal.aborted||session.current?.node!==node)return;setKeyResult(result);const candidate=result.candidates[0];if(candidate&&!result.ambiguous&&candidate.score>=.5){setParams(old=>old[1]===0?old.map((v,i)=>i===0?candidate.root:i===1?(candidate.mode==='Major'?1:2):v):old);setStatus('Auto applied. Detected '+choices[0][candidate.root]+' '+candidate.mode+'. Confirm against the accompaniment.');}else setStatus('Auto applied. Key uncertain; choose Key / Scale or use Detect Key on a longer phrase.');}).catch(e=>{if(!controller.signal.aborted)setStatus('Auto applied. Key detection failed: '+(e instanceof Error?e.message:'retry Detect Key.'));});}
+          } else {autoKeyCapture.current=null;setAutoSummary('No stable vocal detected. Retry on a voiced phrase.');setStatus('Not enough voiced audio. Sing for three seconds and retry.');}
         } else {
           setMeter(data);
+          if(autoKeyCapture.current&&data.pitch>0&&(data.confidence??0)>=.75)autoKeyCapture.current.push({midi:69+12*Math.log2(data.pitch/440),confidence:data.confidence,duration:2048/ctx!.sampleRate});
           const capture=keyCapture.current;
           if(capture){if(data.pitch>0&&(data.confidence??0)>=.75)capture.frames.push({midi:69+12*Math.log2(data.pitch/440),confidence:data.confidence,duration:2048/ctx!.sampleRate});if(ctx!.currentTime-capture.start>=10)void finishKeyCapture();}
           setPitchHistory(p => [...p.slice(-119), data.pitch]);
@@ -278,10 +288,10 @@ export default function PluginUiWorkbench() {
         const mag = (a: number, b: number, d: number) => Math.hypot(a + b * Math.cos(w) + d * Math.cos(2 * w), -b * Math.sin(w) - d * Math.sin(2 * w));
         dB += 20 * Math.log10(mag(1 + alpha * A, -2 * cos, 1 - alpha * A) / mag(1 + alpha / A, -2 * cos, 1 - alpha / A));
       }
-      const y = 150 - dB * 6; x ? c.lineTo(x, y) : c.moveTo(x, y);
+      const y = 150 - (stages.eq?dB:0) * 6; x ? c.lineTo(x, y) : c.moveTo(x, y);
     }
     c.stroke();
-  }, [params, tab, active]);
+  }, [params, tab, active, stages.eq]);
   function moveEq(e: React.PointerEvent<HTMLButtonElement>,band:number){if(!e.currentTarget.hasPointerCapture(e.pointerId))return;const box=e.currentTarget.parentElement!.getBoundingClientRect(),base=13+band*3;const freq=20*1000**Math.max(0,Math.min(1,(e.clientX-box.left)/box.width)),gain=(.5-(e.clientY-box.top)/box.height)*50;change(base,Math.round(Math.max(definitions[base].lo,Math.min(definitions[base].hi,freq))));change(base+1,Math.round(Math.max(-12,Math.min(12,gain))*10)/10);}
   function valueText(i: number) {
     if (i === 28 || i === 31) return `${Math.round(params[i] * 100)}%`;
@@ -292,7 +302,7 @@ export default function PluginUiWorkbench() {
     const p=definitions[i];
     return <Knob key={p.id} label={title ?? p.name} min={p.lo} max={p.hi} step={p.step} initial={p.initial} value={params[i]} text={valueText(i)} onChange={v=>change(i,v)} />;
   }
-  function extraControl(key: Exclude<keyof Extras,'harsh'|'opto'|'limit'>, label: string, min=0,max=100,step=1,suffix='%') {
+  function extraControl(key: Exclude<keyof Extras,'harsh'|'opto'|'limit'|'safety'>, label: string, min=0,max=100,step=1,suffix='%') {
     return <Knob label={label} min={min} max={max} step={step} value={extras[key]} initial={builtIns[0].extras[key]} text={extras[key]+suffix} onChange={v=>changeExtra(key,v)} />;
   }
   function selectors() {
@@ -307,7 +317,7 @@ export default function PluginUiWorkbench() {
   const meterPercent = (v: number) => Math.max(0, Math.min(100, (Number(level(v)) + 60) / 60 * 100));
   return <main className="app-shell" style={{zoom:uiScale}}>
     <header className="app-header">
-      <div className="brand"><b>M</b><div><h1>Matale Tune</h1><small>Pro Vocal Processor · Browser 0.6.0</small></div></div>
+      <div className="brand"><b>M</b><div><h1>Matale Tune</h1><small>Pro Vocal Processor · Browser 0.7.0</small></div></div>
       <div className="header-right">
         <label className="preset-select">Preset<select aria-label="Preset" value={presetId} onChange={e=>{
           loadPreset(e.target.value);
@@ -322,7 +332,7 @@ export default function PluginUiWorkbench() {
     <aside className="sidebar"><small>VOCAL TOOLS</small><nav aria-label="Vocal processors">
       {['Home', 'Pitch', 'Dynamics', 'EQ', 'Effects', 'Settings', 'Note Editor', 'Denoise'].map((name, i) => <button key={name} aria-pressed={tab === i - 1} onClick={() => setTab(i - 1)}>
         <span aria-hidden="true">{['⌂', '〰', '≋', '☷', '✧', '⚙', '♬', '◌'][i]}</span>{name}</button>)}
-      </nav><div className="sidebar-foot"><span className={'dot ' + (active ? 'live' : '')} />{active ? 'Engine running' : 'Engine stopped'}<small>2048-frame DSP latency</small></div>
+      </nav><div className="sidebar-foot"><span className={'dot ' + (active ? 'live' : '')} />{active ? 'Engine running' : 'Engine stopped'}<small>{extras.safety?'2176':'2048'}-frame DSP latency</small></div>
     </aside>
     <div className="workspace">
       <p className="session-notice" aria-live="polite">{status}</p>
@@ -367,8 +377,8 @@ export default function PluginUiWorkbench() {
       </div>
       {tab === -1 ? <>
         <div className="home-grid"><section className="panel auto-panel"><div className="auto-description"><h2><span>✦</span> Auto Mode</h2><p>A starting point for your vocal. Fine-tune by ear.</p>
-          <ul className="auto-options" aria-label="Include in Auto">{([['smooth','Vocal Smooth'],['dynamics','Dynamic range control'],['deesser','Harsh voice / De-Esser'],['eq','Smart EQ'],['pitch','Pitch retune'],['reverb','Reverb'],['delay','Delay']] as const).map(([key,label])=><li key={key}><label><input type="checkbox" checked={autoIncludes[key]} onChange={e=>setAutoIncludes(old=>({...old,[key]:e.target.checked}))} />{label}</label></li>)}</ul>
-          <div className="auto-tip"><span>✧</span><div><b>Pitch confidence</b><small>{meter.pitch?Math.round((meter.confidence??0)*100)+'% periodicity':'Waiting for voiced input'}</small></div></div></div>
+          <label className="auto-key-option"><input type="checkbox" checked={autoKey} onChange={e=>setAutoKey(e.target.checked)}/> Auto detect key (Chromatic only)</label><ul className="auto-options" aria-label="Include in Auto">{([['smooth','Vocal Smooth'],['dynamics','Dynamic range control'],['deesser','Harsh voice / De-Esser'],['eq','Smart EQ'],['pitch','Pitch retune'],['reverb','Reverb'],['delay','Delay']] as const).map(([key,label])=><li key={key}><label><input type="checkbox" checked={autoIncludes[key]} onChange={e=>setAutoIncludes(old=>({...old,[key]:e.target.checked}))} />{label}</label></li>)}</ul>
+          <p className="auto-summary">{autoSummary||'Auto listens to a voiced phrase. Your selected key / scale is retained.'}</p><div className="auto-tip"><span>✧</span><div><b>Pitch confidence</b><small>{meter.pitch?Math.round((meter.confidence??0)*100)+'% periodicity':'Waiting for voiced input'}</small></div></div></div>
           <div className="auto-action"><button className="auto-orb" aria-label="Set Audio On Auto" disabled={!active || analysing} onClick={() => runAuto()}>
             <span>✦</span><b>{analysing ? 'LISTENING' : 'AUTO'}</b><small>{analysing ? `${Math.round(meter.progress * 100)}%` : '3 sec vocal analysis'}</small></button>
             <span className="auto-caption"><i className={'dot ' + (active ? 'live' : '')} />{analysing ? 'Sing for three seconds' : active ? 'Ready to analyse' : 'Start an input to enable Auto'}</span></div>
@@ -387,15 +397,15 @@ export default function PluginUiWorkbench() {
         </div>)}</section>
       </> : tab!==5&&tab!==6&&<section className="panel rack"><div className="panel-heading"><h2>{tab===4?'Audio & interface settings':tabs[tab]}</h2><span className="tag">MANUAL CONTROLS</span></div>
         {tab === 0 && <><svg viewBox="0 0 1000 120" role="img" aria-label="Detected pitch history"><polyline points={points} fill="none" stroke="#1685ff" strokeWidth="2" /></svg><small>Live pitch history · Formant is a dual-band colour filter.</small></>}
-        {tab === 2 && <><div className="eq-graph"><canvas ref={eq} width="1000" height="300" aria-label="EQ response curve" />{[0,1,2,3,4].map(band=><button key={band} className={'eq-node '+(eqBand===band?'selected':'')} aria-label={'EQ band '+(band+1)} aria-pressed={eqBand===band} style={{left:Math.log(params[13+band*3]/20)/Math.log(1000)*100+'%',top:50-params[14+band*3]*2+'%'}} onPointerDown={e=>{setEqBand(band);e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={e=>moveEq(e,band)} onPointerUp={e=>e.currentTarget.releasePointerCapture(e.pointerId)} onClick={()=>setEqBand(band)} onKeyDown={e=>{if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();change(14+band*3,Math.max(-12,Math.min(12,params[14+band*3]+(e.key==='ArrowUp'?.5:-.5))));}}}>{band+1}</button>)}<span className="eq-axis">{[20,100,1000,10000,20000].map((f,i)=><span key={f} style={{left:Math.log(f/20)/Math.log(1000)*100+'%',transform:i===0?'none':i===4?'translateX(-100%)':'translateX(-50%)'}}>{f>=1000?f/1000+' kHz':f+' Hz'}</span>)}</span></div><small>Drag a band horizontally for frequency, vertically for gain. Select a band for its rotary controls.</small></>}
-        {tab===1&&<div className="opto-panel"><div><h3>Opto Leveling Compressor</h3><p>Original opto-style dynamics · not a branded hardware emulation</p><button role="switch" aria-label="Opto compressor" aria-checked={extras.opto} onClick={()=>changeExtra('opto',!extras.opto)}>{extras.opto?'Opto On':'Standard compressor'}</button><button role="switch" aria-label="Limit mode" aria-checked={extras.limit} onClick={()=>changeExtra('limit',!extras.limit)}>{extras.limit?'Limit':'Compress'}</button></div><div className="opto-meter"><b>GAIN REDUCTION</b><strong>{(meter.compressionReduction??0).toFixed(1)} dB</strong><progress aria-label="Compressor gain reduction" max={40} value={meter.compressionReduction??0}/></div><Knob label="Peak reduction" min={0} max={100} step={1} initial={30} value={Math.round(-params[8]/.6)} text={Math.round(-params[8]/.6)+'%'} onChange={v=>change(8,-v*.6)}/>{control(12,true,'Compressor gain')}</div>}
+        {tab === 2 && <><div className="eq-actions"><button role="switch" aria-label="EQ enabled" aria-checked={stages.eq} onClick={()=>toggleStage('eq')}>{stages.eq?'EQ On':'EQ bypass'}</button><button onClick={()=>{change(14+eqBand*3,0);change(15+eqBand*3,definitions[15+eqBand*3].initial);}}>Reset selected band</button><button onClick={()=>{setParams(old=>old.map((v,i)=>i>=13&&i<=27?definitions[i].initial:v));setPresetId('current');}}>Reset EQ</button></div><div className="eq-graph"><canvas ref={eq} width="1000" height="300" aria-label="EQ response curve" />{[0,1,2,3,4].map(band=><button key={band} className={'eq-node '+(eqBand===band?'selected':'')} aria-label={'EQ band '+(band+1)} aria-pressed={eqBand===band} style={{left:Math.log(params[13+band*3]/20)/Math.log(1000)*100+'%',top:50-params[14+band*3]*2+'%'}} onPointerDown={e=>{setEqBand(band);e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={e=>moveEq(e,band)} onPointerUp={e=>e.currentTarget.releasePointerCapture(e.pointerId)} onClick={()=>setEqBand(band)} onKeyDown={e=>{if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();change(14+band*3,Math.max(-12,Math.min(12,params[14+band*3]+(e.key==='ArrowUp'?.5:-.5))));}}}>{band+1}</button>)}<span className="eq-axis">{[20,100,1000,10000,20000].map((f,i)=><span key={f} style={{left:Math.log(f/20)/Math.log(1000)*100+'%',transform:i===0?'none':i===4?'translateX(-100%)':'translateX(-50%)'}}>{f>=1000?f/1000+' kHz':f+' Hz'}</span>)}</span></div><small>Drag a band horizontally for frequency, vertically for gain. Select a band for its rotary controls.</small></>}
+        {tab===1&&<div className="opto-panel"><div><h3>Opto Leveling Compressor</h3><p>Original opto-style dynamics · not a branded hardware emulation</p><button role="switch" aria-label="Opto compressor" aria-checked={extras.opto} onClick={()=>changeExtra('opto',!extras.opto)}>{extras.opto?'Opto On':'Standard compressor'}</button><button role="switch" aria-label="Limit mode" aria-checked={extras.limit} onClick={()=>changeExtra('limit',!extras.limit)}>{extras.limit?'Limit':'Compress'}</button></div><div className="opto-meter"><b>GAIN REDUCTION</b><strong>{(meter.compressionReduction??0).toFixed(1)} dB</strong><progress aria-label="Compressor gain reduction" max={40} value={meter.compressionReduction??0}/></div><Knob label="Peak reduction" min={0} max={100} step={1} initial={30} value={Math.round(-params[8]/.6)} text={Math.round(-params[8]/.6)+'%'} onChange={v=>change(8,-v*.6)}/>{control(12,true,'Compressor gain')}{extraControl('sidechainHz','Sidechain high-pass',20,250,5,' Hz')}{extraControl('optoMix','Compressor mix')}</div>}
         {tab===4?<div className="settings-grid">
-          <label>Interface size<select aria-label="Interface size" value={uiScale} onChange={e=>setUiScale(Number(e.target.value))}><option value="1">100% · Standard</option><option value="1.15">115% · Large text</option><option value="1.3">130% · Extra large</option></select></label>
+          <label className="safety-option">Output safety limiter<input type="checkbox" role="switch" aria-label="Output safety limiter" checked={extras.safety} onChange={e=>changeExtra('safety',e.target.checked)}/><small>−0.45 dBFS sample peak ceiling · 128-sample lookahead · reduction {(meter.safetyReduction??0).toFixed(1)} dB</small></label><label>Interface size<select aria-label="Interface size" value={uiScale} onChange={e=>setUiScale(Number(e.target.value))}><option value="1">100% · Standard</option><option value="1.15">115% · Large text</option><option value="1.3">130% · Extra large</option></select></label>
           <label>Sample rate<select aria-label="Sample rate" value={sampleRateChoice} onChange={e=>setSampleRateChoice(e.target.value)}><option value="auto">Device default</option>{['44100','48000','96000'].map(v=><option key={v} value={v}>{Number(v)/1000} kHz</option>)}</select></label>
           <label>Latency preference<select aria-label="Latency preference" value={latencyHint} onChange={e=>setLatencyHint(e.target.value as AudioContextLatencyCategory)}><option value="interactive">Interactive</option><option value="balanced">Balanced</option><option value="playback">Playback</option></select></label>
           <label>Analysis display<select aria-label="Analysis display" value={displayMode} onChange={e=>setDisplayMode(e.target.value as 'waveform'|'spectrum')}><option value="spectrum">Spectrum</option><option value="waveform">Waveform</option></select></label>
           <Knob label="Monitor volume" min={0} max={100} step={1} value={monitorVolume} initial={70} text={monitorVolume+'%'} onChange={setMonitorVolume} />
-          <div className="settings-note"><b>Current audio session</b><p>{session.current?session.current.context.sampleRate+' Hz · '+(2048000/session.current.context.sampleRate).toFixed(1)+' ms DSP latency':'No input running.'}</p>
+          <div className="settings-note"><b>Current audio session</b><p>{session.current?session.current.context.sampleRate+' Hz · '+((extras.safety?2176000:2048000)/session.current.context.sampleRate).toFixed(1)+' ms DSP latency':'No input running.'}</p>
           <p>Sample rate / latency preferences apply when you start the next input. Device and browser latency are additional.</p><p>Knobs: drag up/down, use arrow keys, or double-click to reset. Shift-drag gives finer control.</p></div>
         </div>:<div className="rack-controls">{definitions.map((p, i) => p.page === tab && i > 3 && (tab!==2||Math.floor((i-13)/3)===eqBand) && (tab!==1||!extras.opto) ? control(i) : null)}{tab===1&&<>{extraControl('deess','De-Esser amount')}{extraControl('deessHz','Sibilance frequency',3000,10000,100,' Hz')}{extraControl('deessThreshold','De-Esser threshold',-48,-6,1,' dB')}</>}</div>}
       </section>}
@@ -403,7 +413,7 @@ export default function PluginUiWorkbench() {
       <div hidden={tab!==5}><NoteEditor active={tab===5} buffer={loadedAudio} fileName={sourceFile?.name??''} root={params[0]} scale={params[1]} onLoad={()=>file.current?.click()} onKey={setKeyResult} onPreview={previewEdited} onOriginal={()=>sourceFile&&void start('file',sourceFile,true)}/></div>
       <dialog ref={saveDialog} onCancel={()=>setShowSave(false)} onClose={()=>setShowSave(false)} className="save-dialog"><form onSubmit={e=>{e.preventDefault();savePreset();}}><h2>Save vocal preset</h2><p>Save in this browser and download a portable JSON file.</p><label>Preset name<input autoFocus required aria-label="Preset name" value={saveName} maxLength={80} onChange={e=>setSaveName(e.target.value)} /></label><div><button type="button" onClick={()=>setShowSave(false)}>Cancel</button><button type="submit">Save preset</button></div></form></dialog>
       <footer role="status"><span className={active ? 'dot live' : 'dot'} />{status}{analysing && <progress value={meter.progress} max="1" />}</footer>
-      <details><summary>Help, source and licenses</summary><p>Matale Tune Browser 0.6.0 · <a href="/LICENSE.txt" target="_blank" rel="noreferrer">MIT project license</a> · <a href="/THIRD-PARTY-NOTICES.txt" target="_blank" rel="noreferrer">Third-party notices</a></p><p>Audio stays in your browser. Shared C++ DSP runs through WebAssembly, followed by the browser vocal processing stage.</p>
+      <details><summary>Help, source and licenses</summary><p>Matale Tune Browser 0.7.0 · <a href="/LICENSE.txt" target="_blank" rel="noreferrer">MIT project license</a> · <a href="/THIRD-PARTY-NOTICES.txt" target="_blank" rel="noreferrer">Third-party notices</a></p><p>Audio stays in your browser. Shared C++ DSP runs through WebAssembly, followed by the browser vocal processing stage.</p>
         <p><a href="/MataleTune_Source.zip" download>Download source/build scripts</a> · <button onClick={async () => {
           try { const r = await fetch('/VocalDSP.h'); if (!r.ok) throw new Error('Source unavailable'); setSourceCode(await r.text()); }
           catch { setSourceCode('Source is in Source/VocalDSP.h in the package.'); }

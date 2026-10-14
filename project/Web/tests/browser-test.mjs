@@ -66,9 +66,17 @@ try {
   await page.waitForFunction(() => document.querySelector('footer')?.textContent.includes('Auto applied'), undefined, { timeout: 15000 });
   assert.equal(await page.locator('.selectors select').nth(0).inputValue(), '9');
   assert.equal(await page.locator('.selectors select').nth(1).inputValue(), '1');
-  assert.equal(await page.getByRole('spinbutton', { name: 'Reverb', exact: true }).getAttribute('aria-valuenow'), '0.1');
+  assert.equal(await page.getByRole('spinbutton', { name: 'Reverb', exact: true }).getAttribute('aria-valuenow'), '0.04');
   await page.screenshot({ path: join(screenshotDir, 'Browser-Live.png'), fullPage: true });
   console.log('PASS: browser parameter interaction and Auto result with key/scale preserved');
+  await page.getByRole('switch',{name:'Pitch stage',exact:true}).click();
+  await page.getByRole('button',{name:'Toggle vocal processing',exact:true}).click();
+  await page.getByRole('button',{name:'Set Audio On Auto',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('footer')?.textContent.includes('Auto applied'));
+  assert.equal(await page.getByRole('button',{name:'Toggle vocal processing',exact:true}).getAttribute('aria-pressed'),'true');
+  assert.equal(await page.getByRole('switch',{name:'Pitch stage',exact:true}).getAttribute('aria-checked'),'true');
+  assert.equal(await correction.getAttribute('aria-valuenow'),'100');
+
   await page.getByRole('button',{name:'Pitch',exact:true}).click();
   const humanize=page.getByRole('spinbutton',{name:'Humanize (%)',exact:true});await humanize.press('End');
   await page.getByRole('button',{name:'Home',exact:true}).click();
@@ -81,7 +89,7 @@ try {
   const dynamicsBefore=await page.getByRole('spinbutton',{name:'Dynamics',exact:true}).getAttribute('aria-valuenow');
   await page.getByRole('button',{name:'Auto reverb',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('footer')?.textContent.includes('Auto applied'));
-  assert.equal(await reverb.getAttribute('aria-valuenow'),'0.1');assert.equal(await page.getByRole('spinbutton',{name:'Dynamics',exact:true}).getAttribute('aria-valuenow'),dynamicsBefore);
+  assert.equal(await reverb.getAttribute('aria-valuenow'),'0.04');assert.equal(await page.getByRole('spinbutton',{name:'Dynamics',exact:true}).getAttribute('aria-valuenow'),dynamicsBefore);
   console.log('PASS: Auto inclusion switches and per-stage analysis scope');
 
 
@@ -96,6 +104,7 @@ try {
   await page.mouse.move(bandBox.x+bandBox.width/2,bandBox.y+bandBox.height/2);await page.mouse.down();await page.mouse.move(bandBox.x+bandBox.width/2+20,bandBox.y+bandBox.height/2-20,{steps:3});await page.mouse.up();
   assert(Number(await page.getByRole('spinbutton',{name:'Band 3 dB',exact:true}).getAttribute('aria-valuenow'))>0,'EQ graph drag must alter real gain');
   const eq = page.getByRole('spinbutton', { name: 'Band 3 dB', exact: true });
+  await page.getByRole('button',{name:'Reset selected band',exact:true}).click();assert.equal(await eq.getAttribute('aria-valuenow'),'0');
   await eq.focus(); await eq.press('End'); assert.equal(await eq.getAttribute('aria-valuenow'), '12');
   await page.screenshot({ path: join(screenshotDir, 'Browser-EQ.png'), fullPage: true });
   await page.getByRole('button', { name: 'Home', exact: true }).click();
@@ -170,6 +179,13 @@ try {
   await page.waitForFunction(()=>Number.parseFloat(document.querySelector('.input-meter strong')?.textContent)<-35);
   await inputGain.dblclick();await page.waitForFunction(()=>Number.parseFloat(document.querySelector('.input-meter strong')?.textContent)>-25);
   const livePitch=page.getByRole('switch',{name:'Realtime Auto Pitch',exact:true});await livePitch.click();assert.equal(await livePitch.getAttribute('aria-checked'),'false');await livePitch.click();assert.equal(await livePitch.getAttribute('aria-checked'),'true');
+  await page.getByRole('checkbox',{name:'Pitch retune',exact:true}).check();
+  await page.locator('.selectors select').nth(1).selectOption('0');
+  await page.getByRole('button',{name:'Restart vocal',exact:true}).click();
+  await page.getByRole('button',{name:'Set Audio On Auto',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('footer')?.textContent.includes('Detected C Major'),null,{timeout:20000});
+  assert.equal(await page.locator('.selectors select').nth(0).inputValue(),'0');assert.equal(await page.locator('.selectors select').nth(1).inputValue(),'1');
+  console.log('PASS: Auto enables included processing stages, restores correction and detects a confident key from a dry melody');
   await page.getByRole('button',{name:'Detect Key',exact:true}).click();
   await page.getByRole('button',{name:'Apply C Major',exact:true}).waitFor();await page.getByRole('button',{name:'Apply C Major',exact:true}).click();
   assert.equal(await page.locator('.selectors select').nth(0).inputValue(),'0');assert.equal(await page.locator('.selectors select').nth(1).inputValue(),'1');
@@ -215,6 +231,8 @@ try {
   await page.getByRole('button',{name:'Dynamics',exact:true}).click();
   assert(await page.getByRole('heading',{name:'Opto Leveling Compressor',exact:true}).isVisible());
   assert.equal(await page.locator('.opto-panel .rotary svg').first().evaluate(el=>getComputedStyle(el).backgroundImage),'none','Knob SVG must not inherit the white pitch graph background');
+  await page.getByRole('spinbutton',{name:'Compressor mix',exact:true}).press('Home');assert.equal(await page.getByRole('spinbutton',{name:'Compressor mix',exact:true}).getAttribute('aria-valuenow'),'0');
+  await page.getByRole('spinbutton',{name:'Sidechain high-pass',exact:true}).press('End');assert.equal(await page.getByRole('spinbutton',{name:'Sidechain high-pass',exact:true}).getAttribute('aria-valuenow'),'250');
   await page.getByRole('spinbutton',{name:'Peak reduction',exact:true}).press('End');
   assert.equal(await page.getByRole('spinbutton',{name:'Peak reduction',exact:true}).getAttribute('aria-valuenow'),'100');
   await page.getByRole('switch',{name:'Limit mode',exact:true}).click();

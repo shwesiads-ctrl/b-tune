@@ -51,7 +51,7 @@ export class VocalTools {
     const x=(l+r)*.5;this.history[this.historyPos]=x;this.historyPos=(this.historyPos+1)%4096;this.historyCount=Math.min(4096,this.historyCount+1);
     this.inputSum+=(l*l+r*r)*.5;++this.inputN;this.inputPeak=Math.max(this.inputPeak,Math.abs(l),Math.abs(r));
   }
-  process(l,r) {
+  process(l,r,measure=true) {
     this.wet+=this.slew*((this.enabled?1:0)-this.wet);
     for(const key of smoothKeys)this.smooth[key]+=this.slew*(this.target[key]-this.smooth[key]);
     const lpCoef=1-Math.exp(-2*Math.PI*this.target.deessHz/this.sr);
@@ -82,6 +82,10 @@ export class VocalTools {
     // Only engage the extra peak guard when a tonal boost is requested.
     if(this.wet>.0001&&(this.smooth.warmth>0||this.smooth.presence>0)){x=limit(x);y=limit(y);}
     this.left=Number.isFinite(x)?x:0;this.right=Number.isFinite(y)?y:0;
+    if(measure)this.measureOutput(this.left,this.right);
+  }
+  measureOutput(l,r){
+    this.left=l;this.right=r;
     this.leftPeak=Math.max(this.leftPeak,Math.abs(this.left));this.rightPeak=Math.max(this.rightPeak,Math.abs(this.right));
     this.peakHold=Math.max(this.peakHold,this.leftPeak,this.rightPeak);
     let kl=this.left,kr=this.right;
@@ -134,7 +138,23 @@ export class VocalDenoise {
 
 // Original opto-style envelope compressor, not a circuit model of branded hardware.
 export class VocalOpto {
-  constructor(sr){this.energy=0;this.reduction=0;this.slow=0;this.threshold=-18;this.makeup=0;this.limit=false;this.enabled=false;this.detector=1-Math.exp(-1/(sr*.01));this.attack=1-Math.exp(-1/(sr*.01));this.fast=1-Math.exp(-1/(sr*.06));this.tail=1-Math.exp(-1/(sr*2));}
-  set(params,extras,enabled){this.enabled=!!extras.opto&&enabled&&params[9]>1;this.threshold=params[8];this.makeup=params[12];this.limit=!!extras.limit;}
-  process(l,r){this.energy+=this.detector*((l*l+r*r)*.5-this.energy);const wanted=this.enabled?Math.max(0,db(Math.sqrt(this.energy))-this.threshold)*(this.limit?.95:.75):0;this.slow+=this.tail*(wanted-this.slow);const target=Math.max(wanted,this.slow*.5);this.reduction+=(target>this.reduction?this.attack:this.fast)*(target-this.reduction);return this.enabled?10**((this.makeup-this.reduction)/20):1;}
+  constructor(sr){this.energy=0;this.reduction=0;this.slow=0;this.threshold=-18;this.makeup=0;this.limit=false;this.enabled=false;this.mix=1;this.sidechain=80;this.lp=[0,0];this.rate=sr;this.detector=1-Math.exp(-1/(sr*.01));this.attack=1-Math.exp(-1/(sr*.01));this.fast=1-Math.exp(-1/(sr*.08));this.tail=1-Math.exp(-1/(sr*1.5));this.slew=1-Math.exp(-1/(sr*.02));}
+  set(params,extras,enabled){this.enabled=!!extras.opto&&enabled&&params[9]>1;this.threshold=params[8];this.makeupTarget=params[12];this.limit=!!extras.limit;this.mixTarget=clamp((extras.optoMix??100)/100,0,1);this.sidechain=clamp(extras.sidechainHz??80,20,250);}
+  process(l,r){const k=1-Math.exp(-2*Math.PI*this.sidechain/this.rate);this.lp[0]+=k*(l-this.lp[0]);this.lp[1]+=k*(r-this.lp[1]);const x=l-this.lp[0],y=r-this.lp[1];this.energy+=this.detector*((x*x+y*y)*.5-this.energy);const over=db(Math.sqrt(this.energy))-this.threshold,slope=this.limit?.95:.75,knee=6;const wanted=this.enabled?(over<=-knee/2?0:over>=knee/2?over*slope:slope*(over+knee/2)**2/(2*knee)):0;this.slow+=this.tail*(wanted-this.slow);const target=Math.max(wanted,this.slow*.55);this.reduction+=(target>this.reduction?this.attack:this.fast)*(target-this.reduction);this.makeup+=this.slew*((this.makeupTarget??0)-this.makeup);this.mix+=this.slew*((this.mixTarget??1)-this.mix);return this.enabled?((1-this.mix)+this.mix*10**(-this.reduction/20))*10**(this.makeup/20):1;}
+}
+
+// Fixed-memory stereo lookahead guard. Its extra 128 samples are exposed in UI.
+export class VocalSafety {
+  constructor(sr){this.l=new Float32Array(128);this.r=new Float32Array(128);this.peaks=new Float32Array(256);this.indices=new Float64Array(256);this.head=0;this.tail=0;this.n=0;this.gain=1;this.release=1-Math.exp(-1/(sr*.08));this.left=0;this.right=0;}
+  process(l,r,enabled=true){const n=this.n++,pos=n%128,dl=this.l[pos],dr=this.r[pos];this.l[pos]=l;this.r[pos]=r;const peak=Math.max(Math.abs(l),Math.abs(r));while(this.head<this.tail&&this.indices[this.head%256]<n-128)this.head++;while(this.tail>this.head&&this.peaks[(this.tail-1)%256]<=peak)this.tail--;this.peaks[this.tail%256]=peak;this.indices[this.tail%256]=n;this.tail++;const max=this.peaks[this.head%256],wanted=max>.95?.95/max:1;this.gain=wanted<this.gain?wanted:this.gain+this.release*(wanted-this.gain);this.left=enabled?dl*this.gain:l;this.right=enabled?dr*this.gain:r;}
+}
+
+// Pre-effect stereo band energies: repeated Auto passes do not analyse their own EQ.
+export class AutoVocal {
+  constructor(sr){this.coef=[150,500,2500,6000].map(f=>1-Math.exp(-2*Math.PI*f/sr));this.lp=new Float64Array(8);this.bands=new Float64Array(5);this.start();this.running=false;}
+  start(){this.sum=0;this.peak=0;this.count=0;this.lp?.fill(0);this.bands?.fill(0);this.running=true;}
+  observe(l,r){if(!this.running)return;this.sum+=(l*l+r*r)*.5;this.peak=Math.max(this.peak,Math.abs(l),Math.abs(r));this.count++;for(let c=0;c<2;c++){const x=c?r:l;let previous=0;for(let b=0;b<4;b++){const i=c*4+b;this.lp[i]+=this.coef[b]*(x-this.lp[i]);const band=this.lp[i]-previous;this.bands[b]+=band*band*.5;previous=this.lp[i];}this.bands[4]+=(x-previous)**2*.5;}}
+  result(){this.running=false;const rms=Math.sqrt(this.sum/Math.max(1,this.count)),level=db(rms),crest=db(this.peak)-level,total=this.bands.reduce((a,b)=>a+b,0)||1,ratios=Array.from(this.bands,v=>v/total),threshold=clamp(level-5,-36,-10),gr=Math.max(0,level-threshold)*.75,makeup=clamp(Math.min(-20-level+gr,-2-db(this.peak)+gr),0,9),mud=clamp((ratios[1]-.22)*-10,-4,0),presence=ratios[3]<.08?2:ratios[3]>.4?-2:0;
+    return {params:[[2,0],[4,crest>14?45:25],[5,35],[7,100],[8,threshold],[9,4],[10,10],[11,180],[12,makeup],[13,90],[14,ratios[0]>.35?-3:0],[15,.7],[16,300],[17,mud],[18,.9],[19,1200],[20,0],[21,1],[22,3500],[23,presence],[24,.8],[25,10000],[26,ratios[4]<.04?1:0],[27,.7],[28,.02],[31,.04]],extras:{smooth:ratios[3]+ratios[4]>.3?40:20,harsh:true,warmth:ratios[0]<.08?8:0,presence:0,deess:clamp(Math.round(ratios[4]*180),15,55),deessHz:6000,deessThreshold:clamp(level-8,-40,-18),opto:true,limit:false,optoMix:100,sidechainHz:80,safety:true},stats:{inputRms:level,crest,ratios}};
+  }
 }

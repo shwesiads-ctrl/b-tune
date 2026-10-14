@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { VocalTools, VocalDenoise, VocalOpto } from '../public/vocal-tools.js';
+import { VocalTools, VocalDenoise, VocalOpto, VocalSafety, AutoVocal } from '../public/vocal-tools.js';
 function render(hz,settings={},enabled=true,rate=48000,amplitude=.1) {
   const fx=new VocalTools(rate);fx.set(settings,enabled);let sum=0,original=0;
   for(let n=0;n<rate;n++) {
@@ -45,7 +45,18 @@ for(const rate of [44100,48000,96000]){
 }
 
 for(const rate of [44100,48000,96000]){
- const run=(limit=false,enabled=true)=>{const fx=new VocalOpto(rate),params=Array(34).fill(0);params[8]=-24;params[9]=4;params[12]=0;fx.set(params,{opto:true,limit},enabled);let gain=1;for(let i=0;i<rate;i++)gain=fx.process(.2,.2);return {gain,fx};};
- const compress=run();assert(compress.gain<.5,'Opto must attenuate a loud vocal');assert(run(true).gain<compress.gain,'Limit must reduce more than Compress');assert.equal(run(false,false).gain,1,'Master bypass must bypass opto');
+ const run=(limit=false,enabled=true)=>{const fx=new VocalOpto(rate),params=Array(34).fill(0);params[8]=-24;params[9]=4;params[12]=0;fx.set(params,{opto:true,limit},enabled);let gain=1;for(let i=0;i<rate;i++)gain=fx.process(.2*Math.sin(2*Math.PI*220*i/rate),.2*Math.sin(2*Math.PI*220*i/rate));return {gain,fx};};
+ const compress=run();assert(compress.gain>.54&&compress.gain<.60,'Opto must provide the expected ~4.9 dB reduction for the calibrated vocal tone');assert(run(true).gain<compress.gain,'Limit must reduce more than Compress');assert.equal(run(false,false).gain,1,'Master bypass must bypass opto');
  const fx=compress.fx;for(let i=0;i<rate*4;i++)fx.process(0,0);assert(fx.reduction<2,'Opto release must recover');console.log('PASS: opto compression, limit, bypass and recovery at',rate);
+}
+
+for(const rate of [44100,48000,96000]){
+ const guard=new VocalSafety(rate);let peak=0;
+ for(let i=0;i<rate;i++){const l=i%997===0?3:.2*Math.sin(2*Math.PI*440*i/rate);guard.process(l,l*.5);assert(Math.abs(guard.right-guard.left*.5)<1e-7,'Limiter must preserve stereo ratio');peak=Math.max(peak,Math.abs(guard.left));}
+ assert(peak<=.950001,'Lookahead safety must contain transient peaks');const bypass=new VocalSafety(rate);bypass.process(.2,-.1,false);assert.equal(bypass.left,.2);assert.equal(bypass.right,-.1);
+ function analyse(hz){const fx=new AutoVocal(rate);fx.start();for(let i=0;i<rate;i++){const x=.1*Math.sin(2*Math.PI*hz*i/rate);fx.observe(x,x);}return fx.result();}
+ const low=analyse(100),bright=analyse(8000);assert.notDeepEqual(low.params,bright.params,'Auto EQ must adapt to input spectrum');
+ for(const result of [low,bright]){assert(Math.abs(result.stats.inputRms+23.0103)<.02);assert(result.params.every(([i,v])=>Number.isFinite(v)));}
+ const params=Array(34).fill(0);params[8]=-24;params[9]=4;const parallel=new VocalOpto(rate);parallel.set(params,{opto:true,optoMix:0},true);let gain=0;for(let i=0;i<rate;i++)gain=parallel.process(.2*Math.sin(2*Math.PI*440*i/rate),0);assert(Math.abs(gain-1)<1e-7,'Parallel mix zero must retain dry gain');
+ console.log('PASS: stereo peak ceiling, bypass, adaptive raw-input Auto EQ and parallel compression at',rate);
 }
