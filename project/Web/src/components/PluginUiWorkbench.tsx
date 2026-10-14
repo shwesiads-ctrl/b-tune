@@ -292,7 +292,7 @@ export default function PluginUiWorkbench() {
   const meterPercent = (v: number) => Math.max(0, Math.min(100, (Number(level(v)) + 60) / 60 * 100));
   return <main className="app-shell" style={{zoom:uiScale}}>
     <header className="app-header">
-      <div className="brand"><b>M</b><div><h1>Matale Tune</h1><small>Pro Vocal Processor · Browser Edition</small></div></div>
+      <div className="brand"><b>M</b><div><h1>Matale Tune</h1><small>Pro Vocal Processor · Browser 0.4.1</small></div></div>
       <div className="header-right">
         <label className="preset-select">Preset<select aria-label="Preset" value={presetId} onChange={e=>{
           const id=e.target.value;const preset=id.startsWith('builtin:')?builtIns[Number(id.slice(8))]:savedPresets.find(p=>p.name===id.slice(6));
@@ -385,7 +385,7 @@ export default function PluginUiWorkbench() {
       <div hidden={tab!==5}><NoteEditor buffer={loadedAudio} fileName={sourceFile?.name??''} root={params[0]} scale={params[1]} onLoad={()=>file.current?.click()} onKey={setKeyResult} onPreview={previewEdited} onOriginal={()=>sourceFile&&void start('file',sourceFile,true)}/></div>
       <dialog ref={saveDialog} onCancel={()=>setShowSave(false)} onClose={()=>setShowSave(false)} className="save-dialog"><form onSubmit={e=>{e.preventDefault();savePreset();}}><h2>Save vocal preset</h2><p>Save in this browser and download a portable JSON file.</p><label>Preset name<input autoFocus required aria-label="Preset name" value={saveName} maxLength={80} onChange={e=>setSaveName(e.target.value)} /></label><div><button type="button" onClick={()=>setShowSave(false)}>Cancel</button><button type="submit">Save preset</button></div></form></dialog>
       <footer role="status"><span className={active ? 'dot live' : 'dot'} />{status}{analysing && <progress value={meter.progress} max="1" />}</footer>
-      <details><summary>Help, source and licenses</summary><p>Matale Tune Browser 0.4 · <a href="/LICENSE.txt" target="_blank" rel="noreferrer">MIT project license</a> · <a href="/THIRD-PARTY-NOTICES.txt" target="_blank" rel="noreferrer">Third-party notices</a></p><p>Audio stays in your browser. Shared C++ DSP runs through WebAssembly, followed by the browser vocal processing stage.</p>
+      <details><summary>Help, source and licenses</summary><p>Matale Tune Browser 0.4.1 · <a href="/LICENSE.txt" target="_blank" rel="noreferrer">MIT project license</a> · <a href="/THIRD-PARTY-NOTICES.txt" target="_blank" rel="noreferrer">Third-party notices</a></p><p>Audio stays in your browser. Shared C++ DSP runs through WebAssembly, followed by the browser vocal processing stage.</p>
         <p><a href="/MataleTune_Source.zip" download>Download source/build scripts</a> · <button onClick={async () => {
           try { const r = await fetch('/VocalDSP.h'); if (!r.ok) throw new Error('Source unavailable'); setSourceCode(await r.text()); }
           catch { setSourceCode('Source is in Source/VocalDSP.h in the package.'); }

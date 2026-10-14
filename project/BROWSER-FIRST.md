@@ -1,4 +1,4 @@
-# Matale Tune browser preview 0.4.0
+# Matale Tune browser preview 0.4.1
 
 Extract the repository ZIP and open `MataleTune-Browser`:
 
@@ -45,3 +45,9 @@ MATALE_SCREENSHOTS selects a persistent screenshot folder. The chat has no
 supported public preview URL. This launcher opens the browser on your machine.
 
 VST3 / Standalone / AU release builds remain deferred until browser review.
+
+If an old tab shows 404, rerun this launcher and use the new URL it opens.
+It now verifies files/readiness and chooses another port if one is occupied.
+Do not move or delete the extracted folder while it runs. To request a new
+port manually, use `py -3 Start-Browser.py --port 0` on Windows, or
+`python3 Start-Browser.py --port 0` on macOS/Linux.

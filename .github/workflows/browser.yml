@@ -15,6 +15,7 @@ jobs:
           cache-dependency-path: project/Web/package-lock.json
       - run: npm ci
       - run: npm run build
+      - run: python3 ../Tests/LauncherTests.py
       - run: npm run test:dsp
       - run: npm run test:session
       - run: npx playwright install --with-deps chromium

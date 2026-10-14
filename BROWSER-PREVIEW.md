@@ -1,4 +1,4 @@
-# Matale Tune browser preview — 0.4.0
+# Matale Tune browser preview — 0.4.1
 
 Download/extract this repository ZIP and open `MataleTune-Browser`.
 
@@ -22,3 +22,8 @@ applicable. Native plugin release work and browser/native feature parity remain
 separate. Editable source is in `project/`; browser source downloads also include
 the new modules, README/license and tests. Physical vocal/audio-device listening
 still needs testing on your computer.
+
+Launcher 0.4.1 validates the build and page, checks its own server identity,
+and automatically chooses a free port if another server occupies the preferred
+port. Use the exact URL it opens rather than a stale 8765 tab. Keep the build
+folder in place while the server runs; Ctrl+C stops that launcher.

@@ -22,6 +22,27 @@ The ready-built preview requires Python 3, no npm installation. Do not open
 is used. Stop releases the audio input. Ctrl+C in the launcher terminal stops
 the local server. Use `python3 Start-Browser.py --port 0` if the port is occupied.
 
+## 404 / old browser tab
+
+Always start the launcher from the fully extracted `MataleTune-Browser` folder.
+Use the exact new URL it opens; do not keep manually reopening an old 8765 tab.
+Version 0.4.1 checks the build and page before opening the browser and selects a
+free port if another server occupies the preferred port. It does not kill other
+programs. Keep the extracted files in place while the launcher runs.
+
+For an immediate workaround in an older download, open a terminal in that folder:
+
+```sh
+# Windows
+py -3 Start-Browser.py --port 0
+# macOS/Linux
+python3 Start-Browser.py --port 0
+```
+
+The source launcher can also find the ready-built sibling package. If files
+are incomplete, it reports extraction/build instructions instead of opening a
+broken page. If you move/delete a running build, its page asks you to restart.
+
 ## Working features
 
 | Area | What it does |

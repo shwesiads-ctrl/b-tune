@@ -3,3 +3,6 @@ Web/node_modules/
 Web/dist/
 *.log
 .DS_Store
+
+__pycache__/
+*.pyc

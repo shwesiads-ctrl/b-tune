@@ -15,9 +15,9 @@ for m in re.finditer(r'\{"([^"]+)","([^"]+)",([^{}]+)\}', (root/'Source/Paramete
 with zipfile.ZipFile(public/'MataleTune_Source.zip','w',zipfile.ZIP_DEFLATED) as z:
     for p in sorted(root.rglob('*')):
         rel=p.relative_to(root)
-        if not p.is_file() or any(x in ('node_modules','dist','.git') or x.startswith('build') for x in rel.parts[:-1]):
+        if not p.is_file() or any(x in ('node_modules','dist','.git','__pycache__') or x.startswith('build') for x in rel.parts[:-1]):
             continue
-        if p.suffix in ('.zip','.log'):
+        if p.suffix in ('.zip','.log','.pyc'):
             continue
         z.write(p,'MataleTuneVST3/'+str(rel))
 print('Updated shared parameters, readable DSP and source ZIP.')

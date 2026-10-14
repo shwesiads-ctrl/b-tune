@@ -1,4 +1,4 @@
-# Matale Tune source — 0.4.0
+# Matale Tune source — 0.4.1
 
 Original vocal-processing code under the MIT license; dependency licenses are
 retained. See LICENSE and THIRD_PARTY.md. The ready-to-run browser package is
@@ -58,3 +58,11 @@ The prior native build guide is preserved in docs/NATIVE-BUILD.md. Native
 source/scripts remain available, but new browser tools are not yet native
 features. VST3 / Standalone / AU releases remain a later task. JUCE 8 modules
 retain their AGPLv3/commercial licensing despite MIT on original project code.
+
+## Launcher troubleshooting
+
+For a stale 404 tab, rerun the launcher and use its exact newly opened URL.
+It verifies files/readiness and automatically falls back to a free port.
+Use `python3 Start-Browser.py --port 0` to request a free port explicitly.
+Keep the extracted build folder in place while the server runs.
+Launcher regression checks: `python3 Tests/LauncherTests.py`.
