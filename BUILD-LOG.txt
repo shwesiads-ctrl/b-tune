@@ -1,0 +1,287 @@
+## configure.log
+
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+-- The C compiler identification is MSVC 19.44.35229.0
+-- The CXX compiler identification is MSVC 19.44.35229.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring juceaide
+-- Building juceaide
+-- Exporting juceaide
+-- Testing juceaide
+-- Finished setting up juceaide
+-- Configuring done (113.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/a/b-tune/b-tune/build-native
+
+
+## build.log
+
+      D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2620,39):
+      the template instantiation context (the oldest one first) is
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\contexts\juce_LowLevelGraphicsSoftwareRenderer.h(48,80):
+          see reference to class template instantiation 'juce::RenderingHelpers::StackBasedLowLevelGraphicsContext<juce::RenderingHelpers::SoftwareRendererSavedState>' being compiled
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2620,10):
+          while compiling class template member function 'void juce::RenderingHelpers::StackBasedLowLevelGraphicsContext<juce::RenderingHelpers::SoftwareRendererSavedState>::drawLine(const juce::Line<float> &)'
+  
+D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_Line.h(174,44): warning C4459: declaration of 'line' hides global declaration [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
+  (compiling source file '../project/Source/PluginEditor.cpp')
+      D:\a\b-tune\b-tune\project\Source\PluginEditor.cpp(4,20):
+      see declaration of '`anonymous-namespace'::line'
+      D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_Line.h(174,44):
+      the template instantiation context (the oldest one first) is
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\contexts\juce_LowLevelGraphicsContext.h(128,27):
+          see reference to class template instantiation 'juce::Line<float>' being compiled
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_Line.h(174,22):
+          while compiling class template member function 'juce::Point<float> juce::Line<float>::getIntersection(juce::Line<float>) noexcept const'
+              D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(343,5):
+              see the first reference to 'juce::Line<float>::getIntersection' in 'juce::RenderingHelpers::closestPointOnInfiniteLine'
+  
+D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2280,32): warning C4459: declaration of 'line' hides global declaration [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
+  (compiling source file '../project/Source/PluginEditor.cpp')
+      D:\a\b-tune\b-tune\project\Source\PluginEditor.cpp(4,20):
+      see declaration of '`anonymous-namespace'::line'
+      D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2280,32):
+      the template instantiation context (the oldest one first) is
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2406,44):
+          see reference to class template instantiation 'juce::RenderingHelpers::SavedStateBase<juce::RenderingHelpers::SoftwareRendererSavedState>' being compiled
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2280,10):
+          while compiling class template member function 'void juce::RenderingHelpers::SavedStateBase<juce::RenderingHelpers::SoftwareRendererSavedState>::drawLine(juce::Line<float>)'
+              D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2620,105):
+              see the first reference to 'juce::RenderingHelpers::SavedStateBase<juce::RenderingHelpers::SoftwareRendererSavedState>::drawLine' in 'juce::RenderingHelpers::StackBasedLowLevelGraphicsContext<juce::RenderingHelpers::SoftwareRendererSavedState>::drawLine'
+  
+D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_EdgeTable.h(118,24): warning C4459: declaration of 'line' hides global declaration [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
+  (compiling source file '../project/Source/PluginEditor.cpp')
+      D:\a\b-tune\b-tune\project\Source\PluginEditor.cpp(4,20):
+      see declaration of '`anonymous-namespace'::line'
+      D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_EdgeTable.h(118,24):
+      the template instantiation context (the oldest one first) is
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2257,10):
+          while compiling class template member function 'void juce::RenderingHelpers::SavedStateBase<juce::RenderingHelpers::SoftwareRendererSavedState>::fillPath(const juce::Path &,const juce::AffineTransform &)'
+              D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2618,105):
+              see the first reference to 'juce::RenderingHelpers::SavedStateBase<juce::RenderingHelpers::SoftwareRendererSavedState>::fillPath' in 'juce::RenderingHelpers::StackBasedLowLevelGraphicsContext<juce::RenderingHelpers::SoftwareRendererSavedState>::fillPath'
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2265,33):
+          see reference to class template instantiation 'juce::RenderingHelpers::ClipRegions::EdgeTableRegion<SavedStateType>' being compiled
+          with
+          [
+              SavedStateType=juce::RenderingHelpers::SoftwareRendererSavedState
+          ]
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(1707,14):
+          while compiling class template member function 'void juce::RenderingHelpers::ClipRegions::EdgeTableRegion<SavedStateType>::renderImageUntransformed(SavedStateType &,const juce::Image &,int,int,int,bool) const'
+          with
+          [
+              SavedStateType=juce::RenderingHelpers::SoftwareRendererSavedState
+          ]
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(1709,19):
+          see reference to function template instantiation 'void juce::RenderingHelpers::SoftwareRendererSavedState::renderImageUntransformed<const juce::EdgeTable>(IteratorType &,const juce::Image &,int,int,int,bool) const' being compiled
+          with
+          [
+              IteratorType=const juce::EdgeTable
+          ]
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2483,27):
+          see reference to function template instantiation 'void juce::RenderingHelpers::EdgeTableFillers::renderImageUntransformed<IteratorType>(Iterator &,const juce::Image::BitmapData &,const juce::Image::BitmapData &,int,int,int,bool)' being compiled
+          with
+          [
+              IteratorType=const juce::EdgeTable,
+              Iterator=const juce::EdgeTable
+          ]
+          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(1434,115):
+          see reference to function template instantiation 'void juce::EdgeTable::iterate<juce::RenderingHelpers::EdgeTableFillers::ImageFill<juce::PixelARGB,juce::PixelARGB,true>>(EdgeTableIterationCallback &) noexcept const' being compiled
+          with
+          [
+              EdgeTableIterationCallback=juce::RenderingHelpers::EdgeTableFillers::ImageFill<juce::PixelARGB,juce::PixelARGB,true>
+          ]
+  
+  juce_gui_basics.cpp
+  juce_graphics.cpp
+  MataleTune_vst3_helper.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleTune_vst3_helper.exe
+  juce_graphics_Harfbuzz.cpp
+  juce_events.cpp
+  juce_core.cpp
+  juce_core_CompilationTime.cpp
+  juce_data_structures.cpp
+  juce_audio_basics.cpp
+  juce_audio_utils.cpp
+  juce_audio_formats.cpp
+  juce_audio_devices.cpp
+  juce_dsp.cpp
+  juce_graphics_Sheenbidi.c
+  MataleTune.vcxproj -> D:\a\b-tune\b-tune\build-native\MataleTune_artefacts\Release\Matale Tune_SharedCode.lib
+  Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
+  juce_audio_plugin_client_AAX.cpp
+  juce_audio_plugin_client_AAX_utils.cpp
+  juce_audio_plugin_client_ARA.cpp
+  juce_audio_plugin_client_LV2.cpp
+  juce_audio_plugin_client_Standalone.cpp
+  juce_audio_plugin_client_Unity.cpp
+  juce_audio_plugin_client_VST2.cpp
+  juce_audio_plugin_client_VST3.cpp
+     Creating library D:/a/b-tune/b-tune/build-native/MataleTune_artefacts/Release/VST3/Matale Tune.lib and object D:/a/b-tune/b-tune/build-native/MataleTune_artefacts/Release/VST3/Matale Tune.exp
+  MataleTune_VST3.vcxproj -> D:\a\b-tune\b-tune\build-native\MataleTune_artefacts\Release\VST3\Matale Tune.vst3\Contents\x86_64-win\Matale Tune.vst3
+  removing moduleinfo.json
+  creating D:/a/b-tune/b-tune/build-native/MataleTune_artefacts/Release/VST3/Matale Tune.vst3
+  Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
+  Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
+  NativeProcessorTests.cpp
+  DSPTests.cpp
+  Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
+  NativeVocalTests.cpp
+  MataleDSPTests.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleDSPTests.exe
+  MataleNativeVocalTests.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleNativeVocalTests.exe
+D:\a\b-tune\b-tune\project\Source\VocalDSP.h(168,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data [D:\a\b-tune\b-tune\build-native\MataleNativeProcessorTests.vcxproj]
+  (compiling source file '../project/Tests/NativeProcessorTests.cpp')
+  
+D:\a\b-tune\b-tune\project\Source\VocalDSP.h(168,62): warning C4244: '=': conversion from 'int' to 'float', possible loss of data [D:\a\b-tune\b-tune\build-native\MataleNativeProcessorTests.vcxproj]
+  (compiling source file '../project/Tests/NativeProcessorTests.cpp')
+  
+  MataleNativeProcessorTests.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleNativeProcessorTests.exe
+  Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
+
+
+## tests.log
+
+Internal ctest changing into directory: D:/a/b-tune/b-tune/build-native
+Test project D:/a/b-tune/b-tune/build-native
+      Start  1: native-vocal
+ 1/10 Test  #1: native-vocal .....................   Passed    0.13 sec
+      Start  2: yin
+ 2/10 Test  #2: yin ..............................   Passed    0.05 sec
+      Start  3: scale
+ 3/10 Test  #3: scale ............................   Passed    0.01 sec
+      Start  4: shift
+ 4/10 Test  #4: shift ............................   Passed    0.03 sec
+      Start  5: dynamics
+ 5/10 Test  #5: dynamics .........................   Passed    0.06 sec
+      Start  6: effects
+ 6/10 Test  #6: effects ..........................   Passed    0.08 sec
+      Start  7: auto
+ 7/10 Test  #7: auto .............................   Passed    0.01 sec
+      Start  8: stress
+ 8/10 Test  #8: stress ...........................   Passed    0.08 sec
+      Start  9: realtime
+ 9/10 Test  #9: realtime .........................   Passed    0.10 sec
+      Start 10: native-processor
+10/10 Test #10: native-processor .................   Passed    0.71 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Total Test time (real) =   1.29 sec
+
+
+## pluginval.log
+
+Started validating: D:\a\b-tune\b-tune\build-native\MataleTune_artefacts\Release\VST3\Matale Tune.vst3
+Random seed: 0x2557ad5
+Validation started
+Strictness level: 5
+-----------------------------------------------------------------
+Starting tests in: pluginval / Scan for plugins located in: D:\a\b-tune\b-tune\build-native\MataleTune_artefacts\Release\VST3\Matale Tune.vst3...
+Num plugins found: 1
+
+Testing plugin: VST3-Matale Tune-10cbe618-fcf59f7a
+Matale Audio: Matale Tune v0.8.0
+Completed tests in pluginval / Scan for plugins located in: D:\a\b-tune\b-tune\build-native\MataleTune_artefacts\Release\VST3\Matale Tune.vst3
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open plugin (cold)...
+Completed tests in pluginval / Open plugin (cold)
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open plugin (warm)...
+Running tests 1 times
+Completed tests in pluginval / Open plugin (warm)
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin info...
+
+Plugin name: Matale Tune
+Alternative names: Matale Tune
+SupportsDoublePrecision: no
+Reported latency: 0
+Reported taillength: 30
+Completed tests in pluginval / Plugin info
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin programs...
+Num programs: 0
+All program names checked
+Completed tests in pluginval / Plugin programs
+-----------------------------------------------------------------
+Starting tests in: pluginval / Audio processing...
+Testing with sample rate [44100] and block size [64]
+Testing with sample rate [44100] and block size [128]
+Testing with sample rate [44100] and block size [256]
+Testing with sample rate [44100] and block size [512]
+Testing with sample rate [44100] and block size [1024]
+Testing with sample rate [48000] and block size [64]
+Testing with sample rate [48000] and block size [128]
+Testing with sample rate [48000] and block size [256]
+Testing with sample rate [48000] and block size [512]
+Testing with sample rate [48000] and block size [1024]
+Testing with sample rate [96000] and block size [64]
+Testing with sample rate [96000] and block size [128]
+Testing with sample rate [96000] and block size [256]
+Testing with sample rate [96000] and block size [512]
+Testing with sample rate [96000] and block size [1024]
+Completed tests in pluginval / Audio processing
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin state...
+Completed tests in pluginval / Plugin state
+-----------------------------------------------------------------
+Starting tests in: pluginval / Automation...
+Testing with sample rate [44100] and block size [64] and sub-block size [32]
+Testing with sample rate [44100] and block size [128] and sub-block size [32]
+Testing with sample rate [44100] and block size [256] and sub-block size [32]
+Testing with sample rate [44100] and block size [512] and sub-block size [32]
+Testing with sample rate [44100] and block size [1024] and sub-block size [32]
+Testing with sample rate [48000] and block size [64] and sub-block size [32]
+Testing with sample rate [48000] and block size [128] and sub-block size [32]
+Testing with sample rate [48000] and block size [256] and sub-block size [32]
+Testing with sample rate [48000] and block size [512] and sub-block size [32]
+Testing with sample rate [48000] and block size [1024] and sub-block size [32]
+Testing with sample rate [96000] and block size [64] and sub-block size [32]
+Testing with sample rate [96000] and block size [128] and sub-block size [32]
+Testing with sample rate [96000] and block size [256] and sub-block size [32]
+Testing with sample rate [96000] and block size [512] and sub-block size [32]
+Testing with sample rate [96000] and block size [1024] and sub-block size [32]
+Completed tests in pluginval / Automation
+-----------------------------------------------------------------
+Starting tests in: pluginval / Automatable Parameters...
+Completed tests in pluginval / Automatable Parameters
+-----------------------------------------------------------------
+Starting tests in: pluginval / auval...
+Completed tests in pluginval / auval
+-----------------------------------------------------------------
+Starting tests in: pluginval / vst3 validator...
+INFO: Skipping vst3 validator as validator path hasn't been set
+Completed tests in pluginval / vst3 validator
+-----------------------------------------------------------------
+Starting tests in: pluginval / Basic bus...
+Completed tests in pluginval / Basic bus
+-----------------------------------------------------------------
+Starting tests in: pluginval / Listing available buses...
+Inputs:
+	Named layouts: Mono, Stereo
+	Discrete layouts: Discrete #1
+Outputs:
+	Named layouts: Mono, Stereo
+	Discrete layouts: Discrete #1
+Main bus num input channels: 2
+Main bus num output channels: 2
+Completed tests in pluginval / Listing available buses
+-----------------------------------------------------------------
+Starting tests in: pluginval / Enabling all buses...
+Completed tests in pluginval / Enabling all buses
+-----------------------------------------------------------------
+Starting tests in: pluginval / Disabling non-main busses...
+Completed tests in pluginval / Disabling non-main busses
+-----------------------------------------------------------------
+Starting tests in: pluginval / Restoring default layout...
+Main bus num input channels: 2
+Main bus num output channels: 2
+Completed tests in pluginval / Restoring default layout
+SUCCESS
