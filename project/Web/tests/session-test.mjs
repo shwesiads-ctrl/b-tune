@@ -67,7 +67,7 @@ try {
     await act(async () => nodes[0].onprocessorerror());
     assert(tracks[0].stopped); assert.equal(contexts[0].state, 'closed');
     assert.equal(button('Stop').props.disabled, true);
-    assert(view.root.findByProps({ role: 'status' }).children.some(c => typeof c === 'string' && c.includes('Audio processing failed')));
+    assert(view.root.findByType('footer').children.some(c => typeof c === 'string' && c.includes('Audio processing failed')));
     await act(async () => view.unmount());
     console.log('PASS: processor failure releases microphone and reports error');
   }

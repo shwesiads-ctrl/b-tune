@@ -1,27 +1,24 @@
-# Matale Tune browser preview — 0.3.0
+# Matale Tune browser preview — 0.4.0
 
 Download/extract this repository ZIP and open `MataleTune-Browser`.
 
 - Windows: run `Start-Browser-Windows.bat`.
 - macOS/Linux: run `python3 Start-Browser.py` in that folder.
-- Python 3 is required. No npm installation is needed for the prebuilt preview.
-- Choose Vocal file or Mic input. Wear headphones before enabling Monitor.
+- Python 3 is required. The prebuilt preview needs no npm installation.
+- Choose Vocal file or Mic input; wear headphones before enabling Monitor.
 
-## New working features
+This release adds a persistent realtime vocal panel, Auto Pitch controls,
+loaded-file/live Detect Key, and an independent Vocal Note Editor with actual
+pitch rendering and WAV export. It also fills wide browser windows, improves
+labels and supports large interface sizing. Rotary controls, presets, A/B,
+Vocal Smooth, De-Esser and the other processing tools remain available.
 
-Rotary knobs only (drag, keyboard and double-click reset); preset selection,
-Save/export and Import; independent A/B snapshots; real Vocal Smooth, Harsh
-control, Warmth, Presence and De-Esser processing; six processing stage switches;
-Auto inclusion and per-stage analysis; live measured pitch confidence/range,
-register estimate, RMS energy, spectrum/waveform, momentary LUFS, L/R and peak
-hold; applied audio settings.
+Read the root README for full instructions, the distinction between Auto Pitch
+and setup AUTO, and the limits of file note editing / key estimation. This is
+original note-editor code, not Celemony Melodyne.
 
-The editable project is now directly available in `project/`. A complete source
-ZIP is also included at `MataleTune-Browser/dist/MataleTune_Source.zip` and can
-be downloaded through the running app. See `project/docs/BROWSER-FEATURES.md`
-for implementation details and executed validation.
-
-New vocal processing currently runs in a browser AudioWorklet extension after
-the original portable WASM chain. Native plugin parity and VST3 / Standalone /
-AU release builds are deferred until browser review is complete. Browser tests
-use synthetic audio; please check real vocal listening and hardware locally.
+Original project code is MIT-licensed; third-party dependency licenses remain
+applicable. Native plugin release work and browser/native feature parity remain
+separate. Editable source is in `project/`; browser source downloads also include
+the new modules, README/license and tests. Physical vocal/audio-device listening
+still needs testing on your computer.

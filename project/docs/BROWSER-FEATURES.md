@@ -1,5 +1,7 @@
 # Browser features — version 0.3.0
 
+The subsequent 0.4.0 pitch/key/editor workflow is documented in PITCH-WORKFLOW.md.
+
 All changes in this release target the browser workbench. VST3, Standalone and
 AU packaging remains deferred. The portable WASM engine and native processor
 are unchanged. The new VocalTools JavaScript AudioWorklet extension currently

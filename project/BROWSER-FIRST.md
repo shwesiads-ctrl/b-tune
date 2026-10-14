@@ -1,4 +1,4 @@
-# Matale Tune browser preview 0.3.0
+# Matale Tune browser preview 0.4.0
 
 Extract the repository ZIP and open `MataleTune-Browser`:
 
@@ -15,7 +15,13 @@ launcher terminal stops its local web server. Audio stays on your computer.
 Knobs: drag up/down, arrow keys, Home/End, Shift-drag for fine adjustment,
 Shift+arrows for coarse adjustment, double-click to reset. There are no sliders.
 
-New working features: preset selection and Save/Import JSON, A/B comparison,
+Version 0.4 adds live Input Gain / Auto Pitch / Correction / Retune / Humanize /
+Output / Monitor controls, Detect Key with explicitly applied candidates, and
+an independent Vocal Note Editor (Analyse → edit → Render → Preview/Export WAV).
+The editor supports monophonic mono/stereo clips up to 120 seconds and shifts
+up to one octave. It is not Celemony Melodyne. See docs/PITCH-WORKFLOW.md.
+
+Other working features: preset selection and Save/Import JSON, A/B comparison,
 Vocal Smooth, Harsh control, Warmth, Presence, De-Esser, stage bypass and
 per-stage Auto, measured pitch confidence/range/register estimate/RMS energy,
 actual spectrum/waveform, momentary LUFS and L/R peaks, audio settings.

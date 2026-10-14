@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import definitions from '../parameters.json';
 import Knob from './Knob';
+import NoteEditor from './NoteEditor';
+import { analyzeBuffer, keyFromFrames } from '../audioAnalysis';
+import type { KeyResult, PitchFrame } from '../../public/pitch-editor.js';
 import { builtIns, parsePreset, clone, effectiveParams, stageNames } from '../state';
 import type { Extras, Snapshot, Preset, Stage } from '../state';
 
 type Meter = { pitch: number; input: number; output: number; progress: number; confidence?: number; rms?: number; left?: number; right?: number; peak?: number; lufs?: number | null; range?: number[] | null; register?: string; deessReduction?: number; smoothReduction?: number };
 type AutoScope = Stage | 'all';
 const noteName = (midi: number) => ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'][((midi % 12) + 12) % 12] + (Math.floor(midi / 12) - 1);
-type Session = { context: AudioContext; node: AudioWorkletNode; analyser: AnalyserNode; gain: GainNode; source?: AudioNode; stream?: MediaStream };
+type Session = { context: AudioContext; node: AudioWorkletNode; analyser: AnalyserNode; gain: GainNode; source?: AudioNode; stream?: MediaStream; inputGain?: GainNode; editing?: boolean; kind?: 'mic'|'file' };
 const tabs = ['Pitch Auto-Tune', 'Compressor', '5-Band EQ', 'Delay / Reverb'];
 const choices = [
   ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'],
@@ -40,6 +43,16 @@ export default function PluginUiWorkbench() {
   const saveDialog = useRef<HTMLDialogElement>(null);
   useEffect(()=>{if(showSave)saveDialog.current?.showModal();else saveDialog.current?.close();},[showSave]);
   const [tab, setTab] = useState(-1);
+  const [inputGainDb,setInputGainDb]=useState(0);
+  const [loadedAudio,setLoadedAudio]=useState<AudioBuffer|null>(null);
+  const [sourceFile,setSourceFile]=useState<File|null>(null);
+  const [keyResult,setKeyResult]=useState<KeyResult|null>(null);
+  const [keyBusy,setKeyBusy]=useState(false),[keyListening,setKeyListening]=useState(false);
+  const [uiScale,setUiScale]=useState(1);
+  const keyJob=useRef<AbortController|null>(null);
+  const keyCapture=useRef<{start:number;frames:Pick<PitchFrame,'duration'|'midi'|'confidence'>[]}|null>(null);
+  const inputGainValue=useRef(0);
+  useEffect(()=>{inputGainValue.current=inputGainDb;const s=session.current;if(s?.inputGain)s.inputGain.gain.setTargetAtTime(10**(inputGainDb/20),s.context.currentTime,.02);},[inputGainDb]);
   const [sourceCode, setSourceCode] = useState('');
   const [meter, setMeter] = useState<Meter>({ pitch: 0, input: 0, output: 0, progress: 0 });
   const [status, setStatus] = useState('Choose a vocal file or microphone to begin.');
@@ -58,7 +71,8 @@ export default function PluginUiWorkbench() {
   const creating = useRef<AudioContext | null>(null);
   useEffect(() => {
     values.current = params; snapshotRef.current={params,extras,stages};
-    session.current?.node.port.postMessage({ params: effectiveParams({params,extras,stages}), extras: {...extras, deess: stages.deesser ? extras.deess : 0} });
+    const engineParams=effectiveParams({params,extras,stages});if(session.current?.editing)engineParams[7]=0;
+    session.current?.node.port.postMessage({ params: engineParams, extras: {...extras, deess: stages.deesser ? extras.deess : 0} });
   }, [params, extras, stages]);
   useEffect(() => { monitorValue.current = monitorVolume; const s=session.current; if(s) s.gain.gain.setTargetAtTime(monitor ? monitorVolume/100 : 0,s.context.currentTime,.02); }, [monitorVolume, monitor]);
   useEffect(() => { displayModeRef.current = displayMode; }, [displayMode]);
@@ -71,6 +85,24 @@ export default function PluginUiWorkbench() {
   function changeExtra(key: keyof Extras, value: number | boolean) { setExtras(old=>({...old,[key]:value}));setPresetId('current'); }
   function toggleStage(stage: Stage) { setStages(old=>({...old,[stage]:!old[stage]}));setPresetId('current'); }
   function runAuto(scope: AutoScope = 'all') { autoScope.current=scope;setAnalysing(true);setStatus('Listening for three seconds…');session.current?.node.port.postMessage({auto:true}); }
+  async function finishKeyCapture() {
+    const capture=keyCapture.current;keyCapture.current=null;setKeyListening(false);if(!capture)return;
+    keyJob.current?.abort();const controller=new AbortController();keyJob.current=controller;setKeyBusy(true);
+    try{const result=await keyFromFrames(capture.frames,controller.signal);if(!controller.signal.aborted){setKeyResult(result);setStatus(result.candidates.length?'Key candidates ready. Audition and apply a candidate.':result.reason);}}
+    catch(e){if(!controller.signal.aborted)setStatus(e instanceof Error?e.message:'Key detection failed.');}finally{if(!controller.signal.aborted)setKeyBusy(false);}
+  }
+  async function detectVocalKey() {
+    if(keyListening){void finishKeyCapture();return;}
+    keyJob.current?.abort();
+    if(loadedAudio&&session.current?.kind!=='mic'){
+      const controller=new AbortController();keyJob.current=controller;setKeyBusy(true);setStatus('Analysing the loaded vocal for key candidates…');
+      try{const result=await analyzeBuffer(loadedAudio,controller.signal);if(!controller.signal.aborted){setKeyResult(result.key);setStatus(result.key.candidates.length?'Key candidates ready. Choose one to apply.':result.key.reason);}}
+      catch(e){if(!controller.signal.aborted)setStatus(e instanceof Error?e.message:'Key detection failed.');}finally{if(!controller.signal.aborted)setKeyBusy(false);}
+    }else if(session.current){keyCapture.current={start:session.current.context.currentTime,frames:[]};setKeyListening(true);setKeyResult(null);setStatus('Detect Key: sing different notes for up to 10 seconds, then finish capture.');}
+    else setStatus('Load a vocal file or start the microphone before detecting key.');
+  }
+  function applyKey(root:number,mode:'Major'|'Minor'){setParams(old=>old.map((v,i)=>i===0?root:i===1?(mode==='Major'?1:2):v));setPresetId('current');setStatus('Applied '+choices[0][root]+' '+mode+'. Confirm against your accompaniment.');}
+  function previewEdited(wav:ArrayBuffer,name:string){void start('file',new File([wav],name+'.wav',{type:'audio/wav'}),true);}
   function savePreset() {
     const name=saveName.trim();if(!name || name.length>80){setStatus('Use a preset name between 1 and 80 characters.');return;}
     const preset: Preset={format:'matale-tune',version:1,name,...clone({params,extras,stages})};
@@ -95,11 +127,12 @@ export default function PluginUiWorkbench() {
   }
   async function stop() {
     generation.current++;
+    keyCapture.current=null;keyJob.current?.abort();setKeyListening(false);setKeyBusy(false);
     const s = session.current; session.current = null;
     const pending = creating.current; creating.current = null;
     s?.stream?.getTracks().forEach(t => t.stop());
     s?.source?.disconnect(); s?.node.disconnect();
-    s?.analyser.disconnect(); s?.gain.disconnect();
+    s?.analyser.disconnect(); s?.gain.disconnect(); s?.inputGain?.disconnect();
     if (s) s.node.port.onmessage = null;
     setActive(false); setBusy(false); setAnalysing(false); setMonitor(false);
     setMeter({ pitch: 0, input: 0, output: 0, progress: 0 });
@@ -111,11 +144,12 @@ export default function PluginUiWorkbench() {
   }
   useEffect(() => () => {
     generation.current++;
+    keyJob.current?.abort();
     session.current?.stream?.getTracks().forEach(t => t.stop());
     void session.current?.context.close();
     void creating.current?.close();
   }, []);
-  async function start(mode: 'mic' | 'file', audioFile?: File) {
+  async function start(mode: 'mic' | 'file', audioFile?: File, editing = false) {
     const stopped = stop(); const token = generation.current;
     setBusy(true); setStatus('Starting audio engine…');
     await stopped;
@@ -135,6 +169,7 @@ export default function PluginUiWorkbench() {
       const analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
       const gain = ctx.createGain(); gain.gain.value = mode === 'file' ? monitorValue.current/100 : 0;
       node.connect(analyser); analyser.connect(gain); gain.connect(ctx.destination);
+      const inputGain=ctx.createGain();inputGain.gain.value=10**(inputGainValue.current/20);inputGain.connect(node);
       let source: AudioNode;
       if (mode === 'mic') {
         stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
@@ -144,12 +179,13 @@ export default function PluginUiWorkbench() {
         if (!audioFile) throw new Error('Choose a vocal audio file.');
         const buffer = await ctx.decodeAudioData(await audioFile.arrayBuffer());
         if (token !== generation.current) return;
+        if(!editing){setLoadedAudio(buffer);setSourceFile(audioFile);setKeyResult(null);}
         const player = ctx.createBufferSource(); player.buffer = buffer; player.loop = true;
         source = player; player.start();
       }
       if (token !== generation.current) return;
-      source.connect(node);
-      session.current = { context: ctx, node, analyser, gain, source, stream }; creating.current = null;
+      source.connect(inputGain);
+      session.current = { context: ctx, node, analyser, gain, source, stream, inputGain, editing, kind: mode }; creating.current = null;
       node.onprocessorerror = () => {
         if (session.current?.node !== node) return;
         void stop();
@@ -171,13 +207,16 @@ export default function PluginUiWorkbench() {
           } else setStatus('Not enough voiced audio. Sing for three seconds and retry.');
         } else {
           setMeter(data);
+          const capture=keyCapture.current;
+          if(capture){if(data.pitch>0&&(data.confidence??0)>=.75)capture.frames.push({midi:69+12*Math.log2(data.pitch/440),confidence:data.confidence,duration:2048/ctx!.sampleRate});if(ctx!.currentTime-capture.start>=10)void finishKeyCapture();}
           setPitchHistory(p => [...p.slice(-119), data.pitch]);
         }
       };
       const latest=snapshotRef.current;
-      node.port.postMessage({ params: effectiveParams(latest), extras: {...latest.extras,deess:latest.stages.deesser?latest.extras.deess:0} });
+      const initialParams=effectiveParams(latest);if(editing)initialParams[7]=0;
+      node.port.postMessage({ params: initialParams, extras: {...latest.extras,deess:latest.stages.deesser?latest.extras.deess:0} });
       setActive(true); setMonitor(mode === 'file');
-      setStatus(mode === 'mic' ? 'Microphone live. Monitoring is muted; wear headphones before enabling.' : 'Vocal file looping. Audio stays in this browser.');
+      setStatus(mode === 'mic' ? 'Microphone live. Monitoring is muted; wear headphones before enabling.' : editing?'Edited/original note preview looping. Realtime Auto Pitch is bypassed.':'Vocal file looping. Audio stays in this browser.');
     } catch (err) {
       if (token === generation.current) setStatus(err instanceof Error ? err.message : 'Audio startup failed.');
     } finally {
@@ -251,9 +290,9 @@ export default function PluginUiWorkbench() {
   const note = midi === null ? '—' : noteName(midi);
   const points = pitchHistory.map((hz, i) => `${i * 8.3},${hz > 0 ? 100 - (69 + 12 * Math.log2(hz / 440) - 36) * 2 : 110}`).join(' ');
   const meterPercent = (v: number) => Math.max(0, Math.min(100, (Number(level(v)) + 60) / 60 * 100));
-  return <main className="app-shell">
+  return <main className="app-shell" style={{zoom:uiScale}}>
     <header className="app-header">
-      <div className="brand"><b>M</b><div><h1>Matale Tune</h1><small>Pro Vocal Processor</small></div></div>
+      <div className="brand"><b>M</b><div><h1>Matale Tune</h1><small>Pro Vocal Processor · Browser Edition</small></div></div>
       <div className="header-right">
         <label className="preset-select">Preset<select aria-label="Preset" value={presetId} onChange={e=>{
           const id=e.target.value;const preset=id.startsWith('builtin:')?builtIns[Number(id.slice(8))]:savedPresets.find(p=>p.name===id.slice(6));
@@ -267,23 +306,29 @@ export default function PluginUiWorkbench() {
           <span className="dot" />{params[3] ? 'Processing on' : 'Bypassed'}</button></div>
     </header>
     <aside className="sidebar"><small>VOCAL TOOLS</small><nav aria-label="Vocal processors">
-      {['Home', 'Pitch', 'Dynamics', 'EQ', 'Effects', 'Settings'].map((name, i) => <button key={name} aria-pressed={tab === i - 1} onClick={() => setTab(i - 1)}>
-        <span aria-hidden="true">{['⌂', '〰', '≋', '☷', '✧', '⚙'][i]}</span>{name}</button>)}
+      {['Home', 'Pitch', 'Dynamics', 'EQ', 'Effects', 'Settings', 'Note Editor'].map((name, i) => <button key={name} aria-pressed={tab === i - 1} onClick={() => setTab(i - 1)}>
+        <span aria-hidden="true">{['⌂', '〰', '≋', '☷', '✧', '⚙', '♬'][i]}</span>{name}</button>)}
       </nav><div className="sidebar-foot"><span className={'dot ' + (active ? 'live' : '')} />{active ? 'Engine running' : 'Engine stopped'}<small>2048-frame DSP latency</small></div>
     </aside>
     <div className="workspace">
       <section className="toolbar" aria-label="Audio input">
-        <div><b>Your voice. Your sound.</b><small>Choose a vocal file or microphone to begin.</small></div>
+        <div><b>Your voice. Your sound.</b><small>{active?(session.current?.kind==='mic'?'Microphone connected · controls update the live vocal.':'File playback active · controls update while you listen.'):'Choose a vocal file or microphone. All processing stays on this computer.'}</small></div>
         <div className="input-actions"><button disabled={busy} onClick={() => file.current?.click()}>Vocal file</button>
           <input ref={file} type="file" accept="audio/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) void start('file', f); e.target.value = ''; }} />
           <button disabled={busy} onClick={() => void start('mic')}>Mic input</button>
-          <button className="stop" disabled={!active && !busy} onClick={() => void stop()}>Stop</button>
+          <button className="stop" disabled={!active && !busy && !keyBusy && !keyListening} onClick={() => void stop()}>Stop</button>
         </div>
         <label className="monitor"><input type="checkbox" checked={monitor} disabled={!active} onChange={e => {
           setMonitor(e.target.checked); const s = session.current; if (s) s.gain.gain.setTargetAtTime(e.target.checked ? monitorValue.current/100 : 0, s.context.currentTime, .02);
         }} /> Monitor · headphones</label>
       </section>
-      <section className="musical-target" aria-label="Musical target">{selectors()}</section>
+      <section className="musical-target" aria-label="Musical target">{selectors()}<button className="detect-key" disabled={busy||keyBusy||(!loadedAudio&&!active)} onClick={()=>void detectVocalKey()}>{keyBusy?'Detecting…':keyListening?'Finish key capture':'Detect Key'}</button><button onClick={()=>setTab(5)}>Open Note Editor</button></section>
+      {keyListening&&<p className="key-message">Listening for melody notes · capture finishes after 10 seconds, or press Finish key capture.</p>}
+      {keyResult&&<section className="key-results" aria-label="Detected key candidates"><div><b>{keyResult.candidates.length?(keyResult.ambiguous?'Possible keys · ambiguous melody':'Detected key candidates'):'Not enough melodic evidence'}</b><p>{keyResult.reason}</p></div>{keyResult.candidates.map(k=><button key={k.root+k.mode} onClick={()=>applyKey(k.root,k.mode)} aria-label={'Apply '+choices[0][k.root]+' '+k.mode}>{choices[0][k.root]} {k.mode}<small>Profile score {k.score.toFixed(2)} · Apply</small></button>)}</section>}
+      <section className="panel realtime-panel" aria-label="Vocal realtime control"><div className="realtime-heading"><div><h2><span>◉</span> Vocal Realtime Control</h2><p>{active?'Change a knob while singing or playing a file. The active engine updates immediately.':'Start Mic input or Vocal file to hear these controls in realtime.'}</p></div><button className="live-pitch-toggle" role="switch" aria-label="Realtime Auto Pitch" aria-checked={stages.pitch&&!session.current?.editing} disabled={!!session.current?.editing} onClick={()=>toggleStage('pitch')}>Auto Pitch · {session.current?.editing?'Preview bypass':stages.pitch?'On':'Off'}</button></div>
+        <div className="realtime-knobs"><Knob label="Input gain" min={-24} max={24} step={.5} initial={0} value={inputGainDb} text={inputGainDb.toFixed(1)+' dB'} onChange={setInputGainDb} />{control(7,true,'Realtime correction')}{control(4,true,'Realtime retune')}{control(5,true,'Realtime humanize')}{control(33,true,'Output gain')}<Knob label="Realtime monitor level" min={0} max={100} step={1} initial={70} value={monitorVolume} text={monitorVolume+'%'} onChange={setMonitorVolume}/></div>
+        <div className="realtime-caption"><span className={'dot '+(active?'live':'')} />{active?(session.current?.editing?'Note preview: realtime Auto Pitch bypassed to retain note edits.':stages.pitch?'Realtime pitch correction follows the selected key / scale.':'Realtime pitch correction is off; the other vocal effects remain available.'):'Audio engine stopped. Settings are ready for your next input.'}<small>Voiced notes only · breaths/noise can show no pitch · use headphones for monitoring.</small></div>
+      </section>
       <div className="analysis-grid">
         <section className="panel analysis"><div className="panel-heading"><h2><span>≋</span> Vocal Analysis</h2><span className={'live-pill ' + (active ? 'live' : '')}><i />{active ? 'Live' : 'Idle'}</span></div>
           <div className="analysis-body"><div className={'note-ring ' + (meter.pitch ? 'voiced' : '')}><strong>{note}</strong><small>{meter.pitch ? meter.pitch.toFixed(1) + ' Hz' : 'No voiced pitch'}</small></div>
@@ -299,8 +344,8 @@ export default function PluginUiWorkbench() {
         </section>
         <section className="panel output"><h2><span>◖</span> Output</h2><div className="output-value">{level(meter.output)} <small>dBFS</small></div>
           <div className="meter-track"><i style={{ width: `${meterPercent(meter.output)}%` }} /></div>
-          <div className="output-info"><span title="400ms BS.1770 K-weighted momentary loudness; not integrated LUFS.">LUFS · M<b>{meter.lufs==null?'—':meter.lufs.toFixed(1)}</b></span>
-            <button className="peak-reset" title="Reset held sample peak" onClick={()=>session.current?.node.port.postMessage({resetPeak:true})}>Peak<b>{level(meter.peak??0)} dBFS</b></button>
+          <div className="output-info"><span title="400ms BS.1770 K-weighted momentary loudness; not integrated LUFS.">Momentary LUFS<b>{meter.lufs==null?'—':meter.lufs.toFixed(1)}</b></span>
+            <button className="peak-reset" title="Reset held sample peak" onClick={()=>session.current?.node.port.postMessage({resetPeak:true})}>Sample Peak<b>{level(meter.peak??0)} dBFS</b></button>
             <div className="stereo-meter">{(['left','right'] as const).map((ch,i)=><div key={ch}><small>{i?'R':'L'}</small><div><i style={{height:meterPercent(meter[ch]??0)+'%'}} /></div></div>)}</div></div>
         </section>
       </div>
@@ -324,10 +369,11 @@ export default function PluginUiWorkbench() {
           {i===3?extraControl('deess','De-Esser'):control([7,8,23,0,31,28][i],true,['Pitch','Dynamics','EQ','De-Esser','Reverb','Delay'][i])}
           <button className="stage-auto" disabled={!active||analysing} aria-label={'Auto '+stage} onClick={()=>runAuto(stage)}>Auto</button>
         </div>)}</section>
-      </> : <section className="panel rack"><div className="panel-heading"><h2>{tab===4?'Audio settings':tabs[tab]}</h2><span className="tag">MANUAL CONTROLS</span></div>
+      </> : tab!==5&&<section className="panel rack"><div className="panel-heading"><h2>{tab===4?'Audio & interface settings':tabs[tab]}</h2><span className="tag">MANUAL CONTROLS</span></div>
         {tab === 0 && <><svg viewBox="0 0 1000 120" role="img" aria-label="Detected pitch history"><polyline points={points} fill="none" stroke="#1685ff" strokeWidth="2" /></svg><small>Live pitch history · Formant is a dual-band colour filter.</small></>}
         {tab === 2 && <><canvas ref={eq} width="1000" height="150" aria-label="EQ response curve" /><small>20 Hz → 20 kHz · centre line 0 dB</small></>}
         {tab===4?<div className="settings-grid">
+          <label>Interface size<select aria-label="Interface size" value={uiScale} onChange={e=>setUiScale(Number(e.target.value))}><option value="1">100% · Standard</option><option value="1.15">115% · Large text</option><option value="1.3">130% · Extra large</option></select></label>
           <label>Sample rate<select aria-label="Sample rate" value={sampleRateChoice} onChange={e=>setSampleRateChoice(e.target.value)}><option value="auto">Device default</option>{['44100','48000','96000'].map(v=><option key={v} value={v}>{Number(v)/1000} kHz</option>)}</select></label>
           <label>Latency preference<select aria-label="Latency preference" value={latencyHint} onChange={e=>setLatencyHint(e.target.value as AudioContextLatencyCategory)}><option value="interactive">Interactive</option><option value="balanced">Balanced</option><option value="playback">Playback</option></select></label>
           <label>Analysis display<select aria-label="Analysis display" value={displayMode} onChange={e=>setDisplayMode(e.target.value as 'waveform'|'spectrum')}><option value="spectrum">Spectrum</option><option value="waveform">Waveform</option></select></label>
@@ -336,9 +382,10 @@ export default function PluginUiWorkbench() {
           <p>Sample rate / latency preferences apply when you start the next input. Device and browser latency are additional.</p><p>Knobs: drag up/down, use arrow keys, or double-click to reset. Shift-drag gives finer control.</p></div>
         </div>:<div className="rack-controls">{definitions.map((p, i) => p.page === tab && i > 3 ? control(i) : null)}{tab===1&&<>{extraControl('deess','De-Esser amount')}{extraControl('deessHz','Sibilance frequency',3000,10000,100,' Hz')}{extraControl('deessThreshold','De-Esser threshold',-48,-6,1,' dB')}</>}</div>}
       </section>}
-      <dialog ref={saveDialog} onCancel={()=>setShowSave(false)} onClose={()=>setShowSave(false)} className="save-dialog"><form onSubmit={e=>{e.preventDefault();savePreset();}}><h2>Save vocal preset</h2><p>Save in this browser and download a portable JSON file.</p><label>Preset name<input autoFocus aria-label="Preset name" value={saveName} maxLength={80} onChange={e=>setSaveName(e.target.value)} /></label><div><button type="button" onClick={()=>setShowSave(false)}>Cancel</button><button type="submit">Save preset</button></div></form></dialog>
+      <div hidden={tab!==5}><NoteEditor buffer={loadedAudio} fileName={sourceFile?.name??''} root={params[0]} scale={params[1]} onLoad={()=>file.current?.click()} onKey={setKeyResult} onPreview={previewEdited} onOriginal={()=>sourceFile&&void start('file',sourceFile,true)}/></div>
+      <dialog ref={saveDialog} onCancel={()=>setShowSave(false)} onClose={()=>setShowSave(false)} className="save-dialog"><form onSubmit={e=>{e.preventDefault();savePreset();}}><h2>Save vocal preset</h2><p>Save in this browser and download a portable JSON file.</p><label>Preset name<input autoFocus required aria-label="Preset name" value={saveName} maxLength={80} onChange={e=>setSaveName(e.target.value)} /></label><div><button type="button" onClick={()=>setShowSave(false)}>Cancel</button><button type="submit">Save preset</button></div></form></dialog>
       <footer role="status"><span className={active ? 'dot live' : 'dot'} />{status}{analysing && <progress value={meter.progress} max="1" />}</footer>
-      <details><summary>Source, builds and tests</summary><p>Audio stays in your browser. Shared C++ DSP runs through WebAssembly, followed by the browser vocal processing stage.</p>
+      <details><summary>Help, source and licenses</summary><p>Matale Tune Browser 0.4 · <a href="/LICENSE.txt" target="_blank" rel="noreferrer">MIT project license</a> · <a href="/THIRD-PARTY-NOTICES.txt" target="_blank" rel="noreferrer">Third-party notices</a></p><p>Audio stays in your browser. Shared C++ DSP runs through WebAssembly, followed by the browser vocal processing stage.</p>
         <p><a href="/MataleTune_Source.zip" download>Download source/build scripts</a> · <button onClick={async () => {
           try { const r = await fetch('/VocalDSP.h'); if (!r.ok) throw new Error('Source unavailable'); setSourceCode(await r.text()); }
           catch { setSourceCode('Source is in Source/VocalDSP.h in the package.'); }

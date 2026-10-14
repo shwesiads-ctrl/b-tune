@@ -1,13 +1,13 @@
 {
   "name": "matale-tune-workbench",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test:dsp": "node tests/wasm-test.mjs && node tests/worklet-test.mjs && node tests/vocal-tools-test.mjs",
+    "test:dsp": "node tests/wasm-test.mjs && node tests/worklet-test.mjs && node tests/vocal-tools-test.mjs && node tests/pitch-editor-test.mjs",
     "test:session": "node tests/session-test.mjs",
     "test:browser": "node tests/browser-test.mjs"
   },
@@ -22,5 +22,6 @@
     "react-test-renderer": "19.0.0",
     "typescript": "5.7.3",
     "vite": "6.1.0"
-  }
+  },
+  "license": "MIT"
 }

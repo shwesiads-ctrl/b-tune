@@ -14,7 +14,7 @@ def main():
     args = parser.parse_args()
     root = Path(__file__).resolve().parent
     dist = root / 'Web' / 'dist' if (root / 'Web' / 'dist').is_dir() else root / 'dist'
-    for name in ('index.html', 'matale-dsp.wasm', 'matale-worklet.js'):
+    for name in ('index.html', 'matale-dsp.wasm', 'matale-worklet.js', 'vocal-tools.js', 'note-worker.js', 'pitch-editor.js'):
         if not (dist / name).is_file():
             parser.error('Missing browser build: ' + str(dist / name))
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(dist))

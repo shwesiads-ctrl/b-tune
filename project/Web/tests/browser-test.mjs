@@ -5,6 +5,7 @@ import { mkdtemp, writeFile, readFile, rm, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { analyzeVocal } from '../public/pitch-editor.js';
 
 const web = fileURLToPath(new URL('..', import.meta.url));
 const origin = 'http://127.0.0.1:5183';
@@ -146,9 +147,56 @@ try {
   await page.getByRole('button',{name:'Mic input',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('footer')?.textContent.includes('Microphone live'));
   assert(await page.locator('.wave-label').textContent().then(s=>s.includes('48 kHz')));
+  await page.getByRole('button',{name:'Detect Key',exact:true}).click();await page.getByRole('button',{name:'Finish key capture',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('.key-results')?.textContent.includes('Not enough melodic evidence'));
+  console.log('PASS: live key capture finishes and rejects insufficient melodic evidence');
   await page.getByRole('button',{name:'Stop',exact:true}).click();
   await page.getByRole('button',{name:'Home',exact:true}).click();
   console.log('PASS: pointer/keyboard/reset knobs, zero sliders, saved/exported/imported presets, invalid import protection, A/B snapshots, stage toggles and applied audio settings');
+
+  // Realtime controls update an active graph; note editing/key detection run in workers.
+  const melodyNotes=[[60,1.5],[64,.9],[67,1.2],[62,.4],[65,.4],[69,.3],[71,.3],[60,1.2]];
+  const totalFrames=Math.round(melodyNotes.reduce((n,[,duration])=>n+duration,0)*rate),melody=Buffer.alloc(44+totalFrames*2);
+  wav.copy(melody,0,0,44);melody.writeUInt32LE(melody.length-8,4);melody.writeUInt32LE(totalFrames*2,40);
+  let offset=0;for(const [midi,duration] of melodyNotes){const count=Math.round(duration*rate),hz=440*2**((midi-69)/12);for(let i=0;i<count;i++)melody.writeInt16LE(Math.round(.15*32767*Math.sin(2*Math.PI*hz*i/rate)),44+(offset+i)*2);offset+=count;}
+  await page.locator('input[accept="audio/*"]').setInputFiles({name:'C-major-vocal.wav',mimeType:'audio/wav',buffer:melody});
+  await page.waitForFunction(()=>document.querySelector('footer')?.textContent.includes('Vocal file looping'));
+  const inputGain=page.getByRole('spinbutton',{name:'Input gain',exact:true});await inputGain.press('Home');
+  await page.waitForFunction(()=>Number.parseFloat(document.querySelector('.input-meter strong')?.textContent)<-35);
+  await inputGain.dblclick();await page.waitForFunction(()=>Number.parseFloat(document.querySelector('.input-meter strong')?.textContent)>-25);
+  const livePitch=page.getByRole('switch',{name:'Realtime Auto Pitch',exact:true});await livePitch.click();assert.equal(await livePitch.getAttribute('aria-checked'),'false');await livePitch.click();assert.equal(await livePitch.getAttribute('aria-checked'),'true');
+  await page.getByRole('button',{name:'Detect Key',exact:true}).click();
+  await page.getByRole('button',{name:'Apply C Major',exact:true}).waitFor();await page.getByRole('button',{name:'Apply C Major',exact:true}).click();
+  assert.equal(await page.locator('.selectors select').nth(0).inputValue(),'0');assert.equal(await page.locator('.selectors select').nth(1).inputValue(),'1');
+  await page.getByRole('button',{name:'Note Editor',exact:true}).click();
+  await page.getByRole('button',{name:'Analyse notes',exact:true}).click();await page.locator('.vocal-note').first().waitFor();
+  assert(await page.locator('.vocal-note').count()>=6);
+  await page.locator('.vocal-note').first().click();const selectedPitch=page.getByRole('spinbutton',{name:'Selected note pitch',exact:true});
+  const originalNote=Number(await selectedPitch.getAttribute('aria-valuenow'));await selectedPitch.press('ArrowUp');assert.equal(Number(await selectedPitch.getAttribute('aria-valuenow')),originalNote+1);
+  await page.getByRole('button',{name:'Undo',exact:true}).click();assert.equal(Number(await selectedPitch.getAttribute('aria-valuenow')),originalNote);
+  await page.getByRole('button',{name:'Redo',exact:true}).click();assert.equal(Number(await selectedPitch.getAttribute('aria-valuenow')),originalNote+1);
+  const secondNote=page.locator('.vocal-note').nth(1),noteBox=await secondNote.boundingBox();await secondNote.scrollIntoViewIfNeeded();
+  await page.mouse.move(noteBox.x+noteBox.width/2,noteBox.y+noteBox.height/2);await page.mouse.down();await page.mouse.move(noteBox.x+noteBox.width/2,noteBox.y-noteBox.height/2,{steps:4});await page.mouse.up();
+  await page.getByRole('button',{name:'Render edits',exact:true}).click();await page.getByRole('button',{name:'Preview edited',exact:true}).waitFor({state:'visible'});
+  await page.waitForFunction(()=>!Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Export WAV')?.disabled);
+  await page.screenshot({path:join(screenshotDir,'Browser-Note-Editor.png'),fullPage:true});
+  const wavDownload=page.waitForEvent('download');await page.getByRole('button',{name:'Export WAV',exact:true}).click();
+  const wavFile=await wavDownload,exported=await readFile(await wavFile.path()),renderRate=exported.readUInt32LE(24),channels=exported.readUInt16LE(22),pcm=new Float32Array((exported.length-44)/(2*channels));
+  for(let i=0;i<pcm.length;i++)pcm[i]=exported.readInt16LE(44+i*2*channels)/32768;
+  const measured=analyzeVocal(pcm.slice(Math.round(renderRate*.4),Math.round(renderRate*1.2)),renderRate);
+  assert(measured.notes.some(n=>Math.abs(n.midi-(originalNote+1))<.3),'Downloaded edited WAV did not contain the changed note pitch');
+  assert(Math.abs(pcm.length/renderRate-totalFrames/rate)<.001,'Edited WAV changed clip duration');
+  await page.getByRole('button',{name:'Preview edited',exact:true}).click();await page.waitForFunction(()=>document.querySelector('footer')?.textContent.includes('note preview looping'));
+  assert(await livePitch.isDisabled(),'Note preview must bypass realtime correction to preserve deliberate edits');
+  await page.getByRole('button',{name:'Stop',exact:true}).click();await page.getByRole('button',{name:'Home',exact:true}).click();
+  await page.setViewportSize({width:2880,height:1600});
+  assert(await page.evaluate(()=>document.querySelector('.workspace').getBoundingClientRect().right>innerWidth-40),'Workspace leaves a large blank area on wide screens');
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('combobox',{name:'Interface size',exact:true}).selectOption('1.15');
+  assert(await page.evaluate(()=>Number.parseFloat(getComputedStyle(document.querySelector('main')).zoom)>1));
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Large interface causes horizontal overflow');
+  await page.getByRole('combobox',{name:'Interface size',exact:true}).selectOption('1');await page.getByRole('button',{name:'Home',exact:true}).click();
+  console.log('PASS: live input gain, Auto Pitch toggle, file key detection/apply, note editing/undo/redo, real edited WAV pitch/duration, preview bypass and wide layout/interface sizing');
 
   await page.setViewportSize({ width: 390, height: 844 });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));

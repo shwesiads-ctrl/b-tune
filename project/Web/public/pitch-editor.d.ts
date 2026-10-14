@@ -1,0 +1,10 @@
+export type PitchFrame = {time:number;duration:number;midi:number;hz:number;confidence:number};
+export type VocalNote = {id:number;start:number;end:number;midi:number;target:number;edited:boolean;confidence:number};
+export type KeyCandidate = {root:number;mode:'Major'|'Minor';score:number};
+export type KeyResult = {candidates:KeyCandidate[];ambiguous:boolean;reason:string};
+export type AnalysisResult = {frames:PitchFrame[];notes:VocalNote[];key:KeyResult;duration:number};
+export function midiToHz(midi:number):number;
+export function detectKey(frames:Pick<PitchFrame,'duration'|'midi'|'confidence'>[]):KeyResult;
+export function analyzeVocal(samples:Float32Array,sr:number):AnalysisResult;
+export function renderNotes(channels:Float32Array[],sr:number,notes:VocalNote[]):Float32Array[];
+export function encodeWav(channels:Float32Array[],sr:number):ArrayBuffer;
