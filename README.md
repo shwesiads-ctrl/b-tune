@@ -1,7 +1,11 @@
 # Matale Tune Windows x64 VST3
 
-Build in progress for 7190afb6c91f881c8a9ae4c98af48e07eee9273a.
+Build: **success**
 
-[Follow this build](https://github.com/shwesiads-ctrl/b-tune/actions/runs/38617599693)
+Source: 7190afb6c91f881c8a9ae4c98af48e07eee9273a
 
-Any existing ZIP belongs to an earlier build until build-status.json reports success for this source revision.
+[Build details](https://github.com/shwesiads-ctrl/b-tune/actions/runs/38617599693)
+
+[Download native VST3 ZIP](https://github.com/shwesiads-ctrl/b-tune/raw/refs/heads/daw-preview-windows/MataleTune-Windows-x64-VST3.zip)
+
+Extract fully and read READ-ME-FIRST.md before installing. This is an unsigned DAW preview; real DAW testing remains necessary.
