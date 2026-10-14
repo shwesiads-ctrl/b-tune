@@ -27,3 +27,25 @@ identified as old; follow the current status and hash.
 Real Windows DAW insertion/listening, DAW-specific save/reopen/export, macOS AU
 and auval, signed distribution, and a native full-feature Standalone application.
 The cloud Linux VST3 is not a Windows binary and is not offered for Windows use.
+
+## Completed Windows build
+
+Run: https://github.com/shwesiads-ctrl/b-tune/actions/runs/38609482052
+
+Source: `7671f7b343c52f57de48ea6600d9f2de48157f7d`.
+
+- MSVC Windows x64 VST3 build: passed.
+- CTest on Windows: 10 executed, 10 passed, including actual native processor.
+- pluginval 1.0.4 strictness 5: SUCCESS; audio/state/automation/bus checks passed.
+- pluginval GUI tests deliberately skipped; actual JUCE editor tests and a
+  Windows screenshot cover layout. The separate Steinberg validator was not
+  configured and is explicitly reported skipped in the pluginval log.
+- ZIP independently fetched through Git, CRC/source SHA checked, and the
+  internal module verified as PE machine 0x8664 (Windows x64).
+- ZIP bytes: 3,679,975. SHA-256:
+  `e76c3562c7fb2dfd3c97f25521cc2ee1603f99c3a623366cc8d57dc5d8aa256d`.
+- Binary archive pinned on branch commit
+  `8777bb968c233d74285a75c2e04677a225a2b337`.
+
+This updates the Windows outcome above. Actual DAW listening/project recall
+and macOS/AU are still unverified.

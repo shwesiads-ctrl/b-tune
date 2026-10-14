@@ -187,3 +187,17 @@ pluginval strictness 5, then publishes a native ZIP and SHA-256 to the
 A build/status page is not proof of success: check its source revision and
 success state before downloading. The ZIP is for DAW testing, with real host
 compatibility and listening still to be verified by users.
+
+### Verified Windows 0.8.0 download
+
+[Download Windows x64 VST3](https://github.com/shwesiads-ctrl/b-tune/raw/8777bb968c233d74285a75c2e04677a225a2b337/MataleTune-Windows-x64-VST3.zip)
+(3.68 MB) · [build/test evidence](https://github.com/shwesiads-ctrl/b-tune/actions/runs/38609482052).
+
+Windows MSVC build, 10 native suites and pluginval strictness 5 passed for source
+`7671f7b343c52f57de48ea6600d9f2de48157f7d`. ZIP CRC, bundled source revision,
+SHA-256 and the PE x64 module were independently checked after download.
+SHA-256: `e76c3562c7fb2dfd3c97f25521cc2ee1603f99c3a623366cc8d57dc5d8aa256d`.
+The standalone Steinberg VST3 validator and AU validation were not run. Actual
+DAW insertion/listening/recall remain for the DAW test.
+
+![Actual Windows compact native editor](Native-Compact-Preview.png)
