@@ -169,7 +169,14 @@ try {
   await page.getByRole('button',{name:'Apply C Major',exact:true}).waitFor();await page.getByRole('button',{name:'Apply C Major',exact:true}).click();
   assert.equal(await page.locator('.selectors select').nth(0).inputValue(),'0');assert.equal(await page.locator('.selectors select').nth(1).inputValue(),'1');
   await page.getByRole('button',{name:'Note Editor',exact:true}).click();
-  await page.getByRole('button',{name:'Analyse notes',exact:true}).click();await page.locator('.vocal-note').first().waitFor();
+  await page.locator('.vocal-note').first().waitFor(); // Editor analyses automatically on open.
+  const timeline=page.getByRole('progressbar',{name:'Vocal progress',exact:true});
+  await page.waitForFunction(()=>Number(document.querySelector('progress[aria-label="Vocal progress"]').value)>0);
+  await page.getByRole('button',{name:'Pause vocal',exact:true}).click();
+  const paused=await timeline.getAttribute('value');await page.waitForTimeout(350);assert.equal(await timeline.getAttribute('value'),paused,'Pause freezes the playback timeline');
+  await page.getByRole('button',{name:'Resume vocal',exact:true}).click();
+  await page.getByRole('button',{name:'Restart vocal',exact:true}).click();
+  await page.waitForTimeout(150);assert.ok(Number(await timeline.getAttribute('value'))<1,'Restart returns to the beginning');
   assert(await page.locator('.vocal-note').count()>=6);
   await page.locator('.vocal-note').first().click();const selectedPitch=page.getByRole('spinbutton',{name:'Selected note pitch',exact:true});
   const originalNote=Number(await selectedPitch.getAttribute('aria-valuenow'));await selectedPitch.press('ArrowUp');assert.equal(Number(await selectedPitch.getAttribute('aria-valuenow')),originalNote+1);
@@ -177,7 +184,7 @@ try {
   await page.getByRole('button',{name:'Redo',exact:true}).click();assert.equal(Number(await selectedPitch.getAttribute('aria-valuenow')),originalNote+1);
   const secondNote=page.locator('.vocal-note').nth(1),noteBox=await secondNote.boundingBox();await secondNote.scrollIntoViewIfNeeded();
   await page.mouse.move(noteBox.x+noteBox.width/2,noteBox.y+noteBox.height/2);await page.mouse.down();await page.mouse.move(noteBox.x+noteBox.width/2,noteBox.y-noteBox.height/2,{steps:4});await page.mouse.up();
-  await page.getByRole('button',{name:'Render edits',exact:true}).click();await page.getByRole('button',{name:'Preview edited',exact:true}).waitFor({state:'visible'});
+  await page.getByRole('button',{name:'Preview edited',exact:true}).click(); // Must render current edits without a separate Render click.
   await page.waitForFunction(()=>!Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Export WAV')?.disabled);
   await page.screenshot({path:join(screenshotDir,'Browser-Note-Editor.png'),fullPage:true});
   const wavDownload=page.waitForEvent('download');await page.getByRole('button',{name:'Export WAV',exact:true}).click();

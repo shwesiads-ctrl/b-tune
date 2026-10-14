@@ -51,3 +51,7 @@ It now verifies files/readiness and chooses another port if one is occupied.
 Do not move or delete the extracted folder while it runs. To request a new
 port manually, use `py -3 Start-Browser.py --port 0` on Windows, or
 `python3 Start-Browser.py --port 0` on macOS/Linux.
+
+### Browser 0.4.2
+
+Vocal playback now shows elapsed / total time with a live progress bar, Pause / Resume, Restart and ±10-second buttons (no sliders). Opening Note Editor automatically analyses the loaded vocal and scrolls to the piano roll. Status and errors appear above the notes. Preview edited renders the current edits automatically before playback; Export WAV becomes available after rendering. Mono/stereo note editing still supports clips up to 120 seconds; use a clean solo vocal.

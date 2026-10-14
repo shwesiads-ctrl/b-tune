@@ -128,3 +128,7 @@ Dependencies retain their own licenses; this does **not** relicense JUCE.
 Native JUCE 8 modules require compliance with their AGPLv3 or commercial JUCE
 license. Browser React dependencies and toolchain notices are documented in
 [THIRD_PARTY.md](THIRD_PARTY.md). No third-party vocal recordings are included.
+
+### Browser 0.4.2
+
+Vocal playback now shows elapsed / total time with a live progress bar, Pause / Resume, Restart and ±10-second buttons (no sliders). Opening Note Editor automatically analyses the loaded vocal and scrolls to the piano roll. Status and errors appear above the notes. Preview edited renders the current edits automatically before playback; Export WAV becomes available after rendering. Mono/stereo note editing still supports clips up to 120 seconds; use a clean solo vocal.
