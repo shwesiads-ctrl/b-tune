@@ -6,6 +6,11 @@ and an independent monophonic note editor.**
 [Download the browser preview](https://github.com/shwesiads-ctrl/b-tune/archive/refs/heads/browser-preview.zip) ·
 [MIT license](LICENSE) · [Third-party notices](THIRD_PARTY.md)
 
+**Native product direction:** VST3/AU will use the compact four-panel vocal
+processor; Standalone will include the full workbench. See
+[product scope](PRODUCT-SCOPE.md). These native profiles are planned, not yet
+implemented in the current browser release.
+
 ![Matale Tune browser interface](MataleTune-Browser/Preview.png)
 
 ## စတင်အသုံးပြုရန် / Quick start
