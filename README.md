@@ -224,3 +224,12 @@ The user demonstrated the previous version loading in Cubase; listening and
 project recall of this version remain DAW checks.
 
 ![Actual Windows native Manual EQ editor](Native-Manual-Preview.png)
+
+## Native UI branding (0.9.1)
+
+The native editor now displays a scalable Matale Tune vector mark and name in
+a permanent header. The footer includes **Make by Myominaung** and
+[Telegram @kominit](https://t.me/kominit), retained in both Auto and Manual views.
+The visual refresh adds shaded rotary knobs, spectrum fill/grid, consistent
+checkboxes and a prominent header Manual button. All parameter IDs and audio
+processing remain unchanged. Windows build validation is pending for this revision.

@@ -1,4 +1,4 @@
-# Matale Tune 0.9.0 native DAW preview
+# Matale Tune 0.9.1 native DAW preview
 
 ## Windows x64 — recommended download
 
@@ -79,9 +79,9 @@ allocations, Auto/key math, mono/stereo LUFS calibration at 44.1/48/96 kHz.
 Local Linux VST3 compilation and these tests verify the implementation; actual
 Windows packaging/validation and real DAW compatibility are separate outcomes.
 
-## Manual controls (0.9.0)
+## Manual controls (0.9.1)
 
-Click **Manual controls** at the bottom right. Choose Pitch / Key, Compressor,
+Click **Manual controls** in the top-right header. Choose Pitch / Key, Compressor,
 EQ, Delay / Reverb / Output, or Vocal / Denoise. Knobs update the live processor;
 the number below each knob is editable. Double-click a knob to restore its
 default. **Back to Auto** returns to the four panels without resetting settings.
@@ -94,3 +94,9 @@ manual settings. Key/scale selections other than Chromatic are retained by Auto.
 
 DAW check: change parameters on each page during playback, automate them, save
 and reopen the project, and confirm the values and sound are restored.
+
+The 0.9.1 native interface adds a scalable vector Matale Tune logo and branded
+header, refined rotary controls, spectrum shading and consistent switches. The
+persistent footer reads “Make by Myominaung” with a “Telegram @kominit” link
+to https://t.me/kominit in both Auto and Manual views. No DSP or parameter IDs
+changed for this visual update.

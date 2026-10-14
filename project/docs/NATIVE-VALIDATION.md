@@ -69,3 +69,12 @@ Binary commit: `56c669cf0bc3919926de2cb592e45300dc45deba`.
 The user supplied a Cubase screenshot showing the earlier 0.8.0 VST3 inserted
 and reporting live pitch/meters with Auto applied. Listening quality and project
 recall were not established by that screenshot; 0.9.0 still needs DAW testing.
+
+## Branded interface 0.9.1
+
+Native header/footer, vector mark, knobs and spectrum presentation were updated
+without changing DSP or parameter/state IDs. Minimum interactive size is now
+980×700; default is 1200×760. Existing bounds/manual-binding, state and DSP
+checks passed on Linux: 10 native suites executed, 10 passed. Auto and Manual
+screenshots were inspected for branding, legible values, controls and footer.
+Windows build/validation is pending for this revision.

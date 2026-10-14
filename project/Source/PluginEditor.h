@@ -5,6 +5,7 @@ public:
     MataleLookAndFeel();
     void drawButtonBackground(juce::Graphics&,juce::Button&,const juce::Colour&,bool,bool) override;
     void drawButtonText(juce::Graphics&,juce::TextButton&,bool,bool) override;
+    void drawToggleButton(juce::Graphics&,juce::ToggleButton&,bool,bool) override;
     void drawRotarySlider(juce::Graphics&,int,int,int,int,float,float,float,juce::Slider&) override;
 };
 class MataleTuneAudioProcessorEditor : public juce::AudioProcessorEditor,private juce::Timer {
@@ -35,7 +36,8 @@ private:
     std::array<juce::ToggleButton,7> includes;
     std::array<juce::Slider,3> knobs;
     std::array<juce::Label,3> knobLabels;
-    juce::Label status;
+    juce::Label status,credit;
+    juce::HyperlinkButton telegram{"Telegram @kominit",juce::URL("https://t.me/kominit")};
     using BA=juce::AudioProcessorValueTreeState::ButtonAttachment;
     using SA=juce::AudioProcessorValueTreeState::SliderAttachment;
     std::vector<std::unique_ptr<BA>> buttons;

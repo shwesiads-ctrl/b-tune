@@ -1,4 +1,4 @@
-# Matale Tune 0.9.0 — Windows x64 VST3 DAW preview
+# Matale Tune 0.9.1 — Windows x64 VST3 DAW preview
 
 This package contains a native Windows plugin, not the browser application.
 The full workbench remains in the browser; native Standalone is not included.
@@ -65,9 +65,9 @@ Original project code is MIT. The binary also includes JUCE and other libraries
 under their own licenses; see the included notices and source. This is not a
 FabFilter, Teletronix or Universal Audio product or an exact circuit emulation.
 
-## Manual controls (0.9.0)
+## Manual controls (0.9.1)
 
-Click **Manual controls** at the bottom right. Choose Pitch / Key, Compressor,
+Click **Manual controls** in the top-right header. Choose Pitch / Key, Compressor,
 EQ, Delay / Reverb / Output, or Vocal / Denoise. Knobs update the live processor;
 the number below each knob is editable. Double-click a knob to restore its
 default. **Back to Auto** returns to the four panels without resetting settings.
@@ -80,3 +80,9 @@ manual settings. Key/scale selections other than Chromatic are retained by Auto.
 
 DAW check: change parameters on each page during playback, automate them, save
 and reopen the project, and confirm the values and sound are restored.
+
+The 0.9.1 native interface adds a scalable vector Matale Tune logo and branded
+header, refined rotary controls, spectrum shading and consistent switches. The
+persistent footer reads “Make by Myominaung” with a “Telegram @kominit” link
+to https://t.me/kominit in both Auto and Manual views. No DSP or parameter IDs
+changed for this visual update.
