@@ -96,3 +96,11 @@ Save and load full parameter settings as `.matalepreset` files. See
 [NATIVE-PRESETS.md](NATIVE-PRESETS.md) for retained settings and host checks.
 Manual uses a left navigation rail, grouped modules, live input feedback and
 a five-band EQ response plot computed from the actual filter settings.
+
+## Studio contrast and response styles (0.11.0)
+
+EQ cards are labelled Low / Low Mid / Mid / High Mid / High, with Frequency,
+Gain and Q controls. Card boundaries, panel background contrast and band accent
+colours are strengthened. Pitch / Key offers six Natural-mode response styles;
+see NATIVE-PRESETS.md for their real response changes and Hard Tune behaviour.
+Legacy 0.10 preset files migrate the new style field to Neutral.

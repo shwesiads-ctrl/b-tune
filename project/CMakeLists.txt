@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-project(MataleTune VERSION 0.10.0 LANGUAGES C CXX)
+project(MataleTune VERSION 0.11.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(MATALE_BUILD_PLUGIN "Build JUCE VST3/AU" ON)

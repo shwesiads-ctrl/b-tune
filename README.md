@@ -280,3 +280,12 @@ Close the DAW and replace the whole `Matale Tune.vst3` bundle in
 use AUTO on a vocal phrase, and Save / Load `.matalepreset` files from the header.
 
 ![Actual Windows grouped Manual EQ interface](Native-Manual-Preview.png)
+
+## Studio contrast and pitch styles (0.11.0)
+
+EQ band headings now read **Low / Low Mid / Mid / High Mid / High**. Stronger
+card borders, shadows, background contrast and band colours distinguish the
+control groups. Pitch / Key provides **Neutral / Soft / Tight / Pop / Rap /
+Ballad** response styles alongside the existing Natural / Hard Tune mode.
+Styles change the live Natural-mode pitch response; Save/Load retains them and
+older 0.10 preset files remain supported. Windows validation is pending.

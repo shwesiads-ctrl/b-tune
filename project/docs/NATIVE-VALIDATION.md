@@ -120,3 +120,11 @@ PE machine 0x8664 VST3 module and SHA-256. Archive size: 3,713,391 bytes.
 SHA-256: `7ad0a231ac08590ac431d21d03ee310fccb2518238edca0f67d2a4ca79dda6a4`.
 Binary commit: `da1d18ad0973c53bb4ac9760cc327714d0b3e1f7`.
 Native file-dialog interaction and listening/project recall remain DAW checks.
+
+## Studio contrast and styles 0.11.0
+
+New checks cover response-style bounds and Soft/Rap/Ballad behaviour, legacy
+Hard Tune timing preservation, round-trip of the new style field and migration
+of a 0.10.0 preset without that field. The existing GUI binding test now covers
+49 manual controls, including the new Style selector. Linux native build and all 10 CTest suites passed, and the revised EQ and Pitch
+screenshots were inspected. Windows validation is pending for this revision.

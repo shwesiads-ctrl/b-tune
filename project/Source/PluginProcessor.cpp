@@ -16,7 +16,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MataleTuneAudioProcessor::cr
         else if(i==3)layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{d.id,1},d.name,true));
         else layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{d.id,1},d.name,juce::NormalisableRange<float>(d.lo,d.hi,d.step),d.initial));
     }
-    for(const auto& d:matale::nativeParameters){if(juce::String(d.id)=="autoProfile"){layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{d.id,1},d.name,juce::StringArray{"Natural","Clear","Warm","Bright","Hard Tune"},0));}else if(d.boolean)layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{d.id,1},d.name,d.initial>.5f));else layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{d.id,1},d.name,juce::NormalisableRange<float>(d.lo,d.hi,d.step),d.initial));}
+    for(const auto& d:matale::nativeParameters){if(juce::String(d.id)=="autoProfile"){layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{d.id,1},d.name,juce::StringArray{"Natural","Clear","Warm","Bright","Hard Tune"},0));}else if(juce::String(d.id)=="pitchResponse"){layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{d.id,1},d.name,juce::StringArray{"Neutral","Soft","Tight","Pop","Rap","Ballad"},0));}else if(d.boolean)layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{d.id,1},d.name,d.initial>.5f));else layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{d.id,1},d.name,juce::NormalisableRange<float>(d.lo,d.hi,d.step),d.initial));}
     return layout;
 }
 bool MataleTuneAudioProcessor::isBusesLayoutSupported(const BusesLayout& l) const {const auto out=l.getMainOutputChannelSet();return (out==juce::AudioChannelSet::mono()||out==juce::AudioChannelSet::stereo())&&l.getMainInputChannelSet()==out;}
@@ -26,6 +26,7 @@ void MataleTuneAudioProcessor::render(juce::AudioBuffer<float>& b,bool bypass){
     std::array<float,matale::parameterCount> raw{};matale::Params p;matale::NativeValues x{};
     for(int i=0;i<matale::parameterCount;++i){raw[size_t(i)]=values[size_t(i)]->load(std::memory_order_relaxed);matale::setParam(p,i,raw[size_t(i)]);}for(int i=0;i<matale::nativeParameterCount;++i)x[size_t(i)]=extras[size_t(i)]->load(std::memory_order_relaxed);
     if(auto* playhead=getPlayHead())if(auto pos=playhead->getPosition())if(auto bpm=pos->getBpm())if(std::isfinite(*bpm))p.bpm=float(*bpm);
+    matale::applyPitchResponse(p,int(x[matale::PitchResponse]));
     int state=autoState.load(std::memory_order_acquire);if(requestAuto.exchange(false)&&state!=1&&state!=2){analyser.start();autoState.store(1,std::memory_order_release);lastAutoStatus.store(0);state=1;}
     if(state==1)p.power=1;if(bypass)p.power=0;
     if(requestPeakReset.exchange(false))vocal.resetPeak();vocal.beginBlock();float peak=0;double sum=0;
@@ -69,7 +70,7 @@ bool MataleTuneAudioProcessor::applyFactoryPreset(int profile){
     auto set=[this](const char* id,float v){auto* p=parameters.getParameter(id);p->beginChangeGesture();p->setValueNotifyingHost(p->convertTo0to1(v));p->endChangeGesture();};
     for(int i=0;i<matale::parameterCount;++i)if(preset.coreChanged[size_t(i)])set(matale::parameterList[i].id,preset.core[size_t(i)]);
     for(int i=0;i<=matale::Safety;++i)set(matale::nativeParameters[i].id,preset.extra[size_t(i)]);
-    set("autoProfile",float(profile));lastAutoStatus.store(0);detectedRoot.store(-1);return true;
+    set("autoProfile",float(profile));set("pitchResponse",0);lastAutoStatus.store(0);detectedRoot.store(-1);return true;
 }
 bool MataleTuneAudioProcessor::savePreset(const juce::File& file,juce::String& error){
     auto root=std::make_unique<juce::XmlElement>("MataleTunePreset");root->setAttribute("version",1);
@@ -89,6 +90,10 @@ bool MataleTuneAudioProcessor::loadPreset(const juce::File& file,juce::String& e
     auto* state=xml->getFirstChildElement();
     if(!state->hasTagName("MataleTuneState"))return fail("Preset parameter data is invalid.");
     auto tree=juce::ValueTree::fromXml(*state);
+    // Presets from 0.10.0 predate the appended response-style parameter.
+    if(tree.getNumChildren()==matale::parameterCount+matale::nativeParameterCount-1&&!tree.getChildWithProperty("id","pitchResponse").isValid()){
+        juce::ValueTree style("PARAM");style.setProperty("id","pitchResponse",nullptr);style.setProperty("value",0,nullptr);tree.appendChild(style,nullptr);
+    }
     if(tree.getNumChildren()!=matale::parameterCount+matale::nativeParameterCount)return fail("Preset parameters are incomplete.");
     std::vector<std::pair<juce::RangedAudioParameter*,float>> validated;
     auto validate=[&](const char* id,float lo,float hi,float step){

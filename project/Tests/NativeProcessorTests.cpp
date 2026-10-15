@@ -31,7 +31,7 @@ void manualCheck(MataleTuneAudioProcessor& p,juce::AudioProcessorEditor* editor)
             check(out.openedOk()&&juce::PNGImageFormat().writeImageToStream(editor->createComponentSnapshot(editor->getLocalBounds()),out),"Cannot capture manual page");
         }
     }
-    check(edited==48,"Manual parameters missing");
+    check(edited==49,"Manual parameters missing");
     pages->setSelectedId(3,juce::sendNotificationSync);editor->setSize(1200,720);
     if(auto path=juce::SystemStats::getEnvironmentVariable("MATALE_NATIVE_SCREENSHOT",{});path.isNotEmpty()){
         auto file=juce::File(path).getSiblingFile("Native-Manual-UI.png");file.deleteFile();juce::FileOutputStream out(file);
@@ -46,11 +46,16 @@ void presetCheck(MataleTuneAudioProcessor& p){
     struct Cleanup{juce::File dir;~Cleanup(){dir.deleteRecursively();}} cleanup{dir};
     auto file=dir.getChildFile("Vocal.matalepreset");juce::String error;
     for(int profile=0;profile<5;++profile){check(p.applyFactoryPreset(profile),"Factory preset failed");check(value(p,"autoProfile")==profile,"Factory character not saved");check(value(p,"style")==float(profile==4),"Factory style is wrong");}
-    set(p,"key",9);set(p,"scale",2);set(p,"output",-4.5f);set(p,"denoiseAmount",37);set(p,"includeDelay",0);
+    set(p,"key",9);set(p,"scale",2);set(p,"output",-4.5f);set(p,"denoiseAmount",37);set(p,"includeDelay",0);set(p,"pitchResponse",5);
     std::vector<float> expected;for(auto* param:p.getParameters())expected.push_back(param->getValue());
     check(p.savePreset(file,error)&&file.existsAsFile(),"Preset save failed");check(p.applyFactoryPreset(0),"Cannot change before reload");
     check(p.loadPreset(file,error),"Preset load failed");int index=0;for(auto* param:p.getParameters())check(std::abs(param->getValue()-expected[size_t(index++)])<.0001f,"Preset round-trip lost a parameter");
     auto valid=file.loadFileAsString();
+    auto legacyPreset=juce::XmlDocument::parse(valid);auto* legacyState=legacyPreset->getFirstChildElement();
+    for(auto* child=legacyState->getFirstChildElement();child;child=child->getNextElement())if(child->getStringAttribute("id")=="pitchResponse"){legacyState->removeChildElement(child,true);break;}
+    check(legacyPreset->writeTo(file)&&p.loadPreset(file,error)&&value(p,"pitchResponse")==0,"0.10 preset migration failed");
+    check(file.replaceWithText(valid)&&p.loadPreset(file,error),"Cannot restore preset fixture");
+
     for(int kind=0;kind<5;++kind){auto xml=juce::XmlDocument::parse(valid);auto* state=xml->getFirstChildElement();
         if(kind==0)xml->setTagName("OtherPlugin");
         if(kind==1)state->getFirstChildElement()->setAttribute("value","not a number");

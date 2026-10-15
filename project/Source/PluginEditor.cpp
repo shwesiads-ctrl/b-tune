@@ -6,7 +6,7 @@ const juce::String uiFont="Segoe UI";
 const juce::String uiFont="DejaVu Sans";
 #endif
 const juce::Colour ink(0xff102d53), muted(0xff607a9c), blue(0xff1685ff), cyan(0xff52d8f5);
-const juce::Colour line(0xffe3edf6), green(0xff13cda0);
+const juce::Colour line(0xffc7d4e3), green(0xff13cda0);
 void text(juce::Graphics& g, const juce::String& s, juce::Rectangle<int> bounds,
           float size = 14.f, juce::Colour colour = ink, bool bold = false,
           juce::Justification justify = juce::Justification::centredLeft) {
@@ -14,11 +14,11 @@ void text(juce::Graphics& g, const juce::String& s, juce::Rectangle<int> bounds,
     g.drawText(s, bounds, justify, true);
 }
 void card(juce::Graphics& g, juce::Rectangle<int> bounds) {
-    juce::DropShadow(juce::Colour(0x11386b9d), 14, {0, 5}).drawForRectangle(g, bounds.reduced(3));
-    g.setGradientFill(juce::ColourGradient(juce::Colours::white, float(bounds.getX()), float(bounds.getY()),
-                       juce::Colour(0xfff8fbff), float(bounds.getRight()), float(bounds.getBottom()), false));
-    g.fillRoundedRectangle(bounds.toFloat(), 16.f);
-    g.setColour(juce::Colour(0xffe2ecf7)); g.drawRoundedRectangle(bounds.toFloat(), 16.f, 1.f);
+    juce::DropShadow(juce::Colour(0x26304b6a),10,{0,4}).drawForRectangle(g,bounds.reduced(3));
+    g.setGradientFill(juce::ColourGradient(juce::Colour(0xfffcfdff),float(bounds.getX()),float(bounds.getY()),juce::Colour(0xffedf2f8),float(bounds.getX()),float(bounds.getBottom()),false));
+    g.fillRoundedRectangle(bounds.toFloat(),11.f);
+    g.setColour(juce::Colour(0xffb5c5d8));g.drawRoundedRectangle(bounds.toFloat().reduced(.5f),11.f,1.2f);
+    g.setColour(juce::Colours::white.withAlpha(.9f));g.drawRoundedRectangle(bounds.toFloat().reduced(2),9.f,1.f);
 }
 void meter(juce::Graphics& g, juce::Rectangle<float> r, float peak) {
     g.setColour(juce::Colour(0xffe8eff6)); g.fillRoundedRectangle(r, r.getHeight() / 2);
@@ -115,7 +115,7 @@ void MataleLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int w,
     auto disc = juce::Rectangle<float>(radius*1.65f, radius*1.65f).withCentre(centre);
     juce::DropShadow(juce::Colour(0x253b6a98),6,{0,3}).drawForPath(g,[&]{juce::Path p;p.addEllipse(disc);return p;}());
     g.setGradientFill(juce::ColourGradient(juce::Colours::white, disc.getX(), disc.getY(),
-                       juce::Colour(0xffe9f1f9), disc.getRight(), disc.getBottom(), false));
+                       juce::Colour(0xffcfdae8), disc.getRight(), disc.getBottom(), false));
     g.fillEllipse(disc);g.setColour(juce::Colours::white);g.drawEllipse(disc.reduced(1),1.5f);
     float angle = start + position * (end-start);
     g.setColour(blue);
@@ -136,7 +136,7 @@ MataleTuneAudioProcessorEditor::MataleTuneAudioProcessorEditor(MataleTuneAudioPr
     for(int i=0;i<7;++i){addAndMakeVisible(includes[size_t(i)]);includes[size_t(i)].setButtonText(includeNames[i]);buttons.push_back(std::make_unique<BA>(p.parameters,matale::nativeParameters[matale::IncludeSmooth+i].id,includes[size_t(i)]));}
     const char* ids[]={"vocalSmooth","vocalWarmth","vocalPresence"};const char* labels[]={"Smooth amount","Vocal warmth","Presence"};
     for(int i=0;i<3;++i){auto& knob=knobs[size_t(i)];addAndMakeVisible(knob);addAndMakeVisible(knobLabels[size_t(i)]);knobLabels[size_t(i)].setText(labels[i],juce::dontSendNotification);knobLabels[size_t(i)].setFont(juce::FontOptions(11.f));knobLabels[size_t(i)].setJustificationType(juce::Justification::centred);knob.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);knob.setTextBoxStyle(juce::Slider::TextBoxBelow,false,72,22);knob.setTextValueSuffix("%");knob.setTitle(labels[i]);knob.setDoubleClickReturnValue(true,matale::nativeParameters[i==0?matale::Smooth:i==1?matale::Warmth:matale::Presence].initial);sliders.push_back(std::make_unique<SA>(p.parameters,ids[i],knob));}
-    peakReset.onClick=[this]{processor.requestPeakReset.store(true);};status.setFont(juce::FontOptions(12.f));status.setColour(juce::Label::textColourId,muted);status.setText("Matale Tune 0.10.0 DAW preview | Play a vocal and press AUTO.",juce::dontSendNotification);
+    peakReset.onClick=[this]{processor.requestPeakReset.store(true);};status.setFont(juce::FontOptions(12.f));status.setColour(juce::Label::textColourId,muted);status.setText("Matale Tune 0.11.0 DAW preview | Play a vocal and press AUTO.",juce::dontSendNotification);
     addAndMakeVisible(manualButton);manualButton.setComponentID("manual");
     manualButton.onClick=[this]{showManual(!manualOpen);};
     addChildComponent(manualPanel);manualPanel.addAndMakeVisible(manualPage);
@@ -185,12 +185,16 @@ MataleTuneAudioProcessorEditor::MataleTuneAudioProcessorEditor(MataleTuneAudioPr
         if(i==0)options={"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
         if(i==1)options={"Chromatic","Major","Minor","Major pentatonic","Minor pentatonic"};
         if(i==2)options={"Natural","Hard Tune"};
-        addControl(d.id,d.name,d.initial,d.page,false,options);
+        juce::String label=d.name;
+        if(i==2)label="Tuning mode";
+        if(i>=13&&i<=27){const char* eqLabels[]={"Frequency (Hz)","Gain (dB)","Q / Width"};label=eqLabels[(i-13)%3];}
+        addControl(d.id,label.toRawUTF8(),d.initial,d.page,false,options);
     }
     for(int i=0;i<=matale::Safety;++i){const auto& d=matale::nativeParameters[i];
         int page=(i==matale::Opto||i==matale::OptoMix||i==matale::SidechainHz||i==matale::Limit)?1: i==matale::Safety?3:4;
         addControl(d.id,d.name,d.initial,page,d.boolean);
     }
+    addControl("pitchResponse","Style",0,0,false,{"Neutral","Soft","Tight","Pop","Rap","Ballad"});
     setResizable(true,true);setResizeLimits(980,700,1800,1000);addAndMakeVisible(credit);credit.setText("Make by Myominaung",juce::dontSendNotification);
     credit.setFont(juce::FontOptions(12.5f));credit.setColour(juce::Label::textColourId,ink);
     addAndMakeVisible(telegram);telegram.setFont(juce::FontOptions(12.5f),false,juce::Justification::centredRight);
@@ -253,7 +257,7 @@ void MataleTuneAudioProcessorEditor::layoutManual(){
     else if(page==2){for(int b=0;b<5;++b)manualModules.push_back({startX+b*(width/5),174,width/5-8,height-192});}
     else if(page==1){manualModules.push_back({startX,64,width,58});for(int r=0;r<2;++r)manualModules.push_back({startX,138+r*((height-154)/2),width,(height-154)/2-10});}
     else {for(int i=0;i<3;++i)manualModules.push_back({startX+i*(width/3),64,width/3-10,height-82});}
-    int index=0;
+    int index=0,pitchChoice=0,pitchKnob=0;
     for(auto& c:manualControls){bool visible=c.page==page;c.label->setVisible(visible);
         if(c.knob)c.knob->setVisible(visible);
         if(c.choice)c.choice->setVisible(visible);
@@ -261,10 +265,10 @@ void MataleTuneAudioProcessorEditor::layoutManual(){
         if(!visible)continue;
         juce::String id=c.knob?c.knob->getComponentID():c.choice?c.choice->getComponentID():c.toggle->getComponentID();
         int x=startX,y=94,w=width,h=128;
-        if(page==0){if(c.choice){w=width/3;x+=index*w;y=94;h=72;}else {int k=index-3;w=width/4;x+=k*w;y=232;h=juce::jmin(156,height-250);}}
+        if(page==0){if(c.choice){w=width/4;x+=pitchChoice++*w;y=94;h=72;}else {int k=pitchKnob++;w=width/4;x+=k*w;y=232;h=juce::jmin(156,height-250);}}
         else if(page==1){if(c.toggle){int col=id=="optoMode"?0:1;w=width/2;x+=col*w;y=76;h=36;}
             else{int k=0;const char* ids[]={"threshold","ratio","attack","release","makeup","optoMix","sidechainHz"};while(k<7&&id!=ids[k])++k;w=width/4;x+=(k%4)*w;h=juce::jmin(155,(height-170)/2);y=154+(k/4)*((height-154)/2);}}
-        else if(page==2){int k=index/3,row=index%3;w=width/5;x+=k*w;int rowH=(height-224)/3;y=206+row*rowH;h=rowH-4;}
+        else if(page==2){int k=index/3,row=index%3;w=width/5;x+=k*w;int rowH=(height-234)/3;y=215+row*rowH;h=rowH-4;}
         else {int group=0,row=0;
             if(page==3){if(id=="delayMix")row=0;else if(id=="delayBeats")row=1;else if(id=="feedback")row=2;else if(id=="reverbMix"){group=1;row=0;}else if(id=="room"){group=1;row=1;}else{group=2;row=id=="output"?0:id=="bpm"?1:2;}}
             else {if(id=="vocalSmooth")row=0;else if(id=="vocalWarmth")row=1;else if(id=="vocalPresence")row=2;else if(id=="harshControl")row=3;else if(id=="deessAmount"){group=1;row=0;}else if(id=="deessHz"){group=1;row=1;}else if(id=="deessThreshold"){group=1;row=2;}else{group=2;row=id=="denoiseAmount"?0:1;}}
@@ -290,7 +294,7 @@ void MataleTuneAudioProcessorEditor::paintManual(juce::Graphics& g){
     text(g,noteName(midi),{28,361,126,32},23,ink,true);
     meter(g,{28.f,402.f,126.f,6.f},processor.inputLevel.load());
     text(g,"Out "+decibel(processor.outputLevel.load())+" dBFS",{28,416,126,18},11,muted);
-    const char* tips[]={"Choose a musical target, then shape the pitch response.","Opto: smooth program-dependent timing. Switch off for standard controls.","Five parametric bands / frequency, gain and Q.","Tempo-synced delay, room ambience and output safety.","Tone shaping, sibilance control and quiet-noise reduction."};
+    const char* tips[]={"Styles shape Natural mode around your response knobs; Hard Tune keeps fixed fast timing.","Opto: smooth program-dependent timing. Switch off for standard controls.","Five parametric bands / frequency, gain and Q.","Tempo-synced delay, room ambience and output safety.","Tone shaping, sibilance control and quiet-noise reduction."};
     text(g,tips[juce::jlimit(0,4,page)],{184,44,panel.getWidth()-206,18},11,muted);
     if(page==0){text(g,"MUSICAL TARGET",{198,72,260,20},10,blue,true);text(g,"PITCH RESPONSE",{198,205,260,20},10,blue,true);}
     if(page==2){
@@ -305,12 +309,16 @@ void MataleTuneAudioProcessorEditor::paintManual(juce::Graphics& g){
             if(i==0)curve.startNewSubPath(x,y);else curve.lineTo(x,y);
         }
         g.setColour(blue);g.strokePath(curve,juce::PathStrokeType(2));
-        for(int b=0;b<5;++b)text(g,"BAND "+juce::String(b+1),manualModules[size_t(b)].reduced(12).withHeight(20),11,blue,true);
+        for(int b=0;b<5;++b){const char* names[]={"LOW","LOW MID","MID","HIGH MID","HIGH"};auto r=manualModules[size_t(b)];
+            const juce::Colour accents[]={juce::Colour(0xff2675db),juce::Colour(0xff15a28c),juce::Colour(0xff7561ce),juce::Colour(0xffce8a28),juce::Colour(0xffce5a75)};
+            g.setColour(accents[b]);g.fillRoundedRectangle(float(r.getX()+12),float(r.getY()+10),float(r.getWidth()-24),3.f,1.5f);
+            text(g,names[b],r.reduced(12).translated(0,7).withHeight(20),12,ink,true);
+        }
     }
     if(page>=3){const char* space[]={"DELAY","REVERB","OUTPUT"};const char* cleanup[]={"TONE / SMOOTH","DE-ESSER","DENOISE"};for(int i=0;i<3;++i)text(g,page==3?space[i]:cleanup[i],manualModules[size_t(i)].reduced(12).withHeight(24),11,blue,true);}
 }
 void MataleTuneAudioProcessorEditor::timerCallback(){int state=processor.autoState.load(std::memory_order_acquire),last=processor.lastAutoStatus.load();autoButton.setEnabled(state!=1&&state!=2);autoButton.setButtonText(state==1?"LISTENING":"AUTO");
-    juce::String message="Matale Tune 0.10.0 DAW preview | Play a vocal and press AUTO.";
+    juce::String message="Matale Tune 0.11.0 DAW preview | Play a vocal and press AUTO.";
     if(state==1)message="Listening: "+juce::String(int(processor.progress.load()*100))+"% | Keep the DAW playing a voiced phrase.";else if(last==3)message="No stable vocal found. Play a voiced phrase and press AUTO again.";else if(last==2)message="Auto applied | Key uncertain: retry on a phrase with several different notes. Chromatic pitch retained.";else if(last==1){int root=processor.detectedRoot.load();const char* names[]={"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};message="Auto applied | EQ, dynamics, smoothing and included effects ready.";if(root>=0)message+=" Key: "+juce::String(names[root])+ (processor.detectedScale.load()==1?" Major":" Minor");}
     const bool opto=processor.parameters.getRawParameterValue("optoMode")->load()>.5f;
     for(auto& c:manualControls)if(c.knob){auto id=c.knob->getComponentID();
@@ -320,6 +328,8 @@ void MataleTuneAudioProcessorEditor::timerCallback(){int state=processor.autoSta
         }
     }
     if(manualOpen)message="Manual / Live changes are saved with your DAW project. Auto updates only the groups you include.";
+    const bool natural=processor.parameters.getRawParameterValue("style")->load()<.5f;
+    for(auto& c:manualControls)if(c.choice&&c.choice->getComponentID()=="pitchResponse"){c.choice->setEnabled(natural);c.label->setEnabled(natural);}
     factoryPreset.setSelectedId(int(processor.parameters.getRawParameterValue("autoProfile")->load())+1,juce::dontSendNotification);
     if(noticeProfile>=0&&noticeProfile!=int(processor.parameters.getRawParameterValue("autoProfile")->load()))noticeUntil=0;
     if(juce::Time::getMillisecondCounterHiRes()<noticeUntil)message=presetNotice;
@@ -328,7 +338,7 @@ void MataleTuneAudioProcessorEditor::timerCallback(){int state=processor.autoSta
     repaint();
 }
 void MataleTuneAudioProcessorEditor::paint(juce::Graphics& g){
-    g.setGradientFill(juce::ColourGradient(juce::Colour(0xfff7fbff),0,0,juce::Colour(0xffedf4fc),float(getWidth()),float(getHeight()),false));g.fillAll();
+    g.setGradientFill(juce::ColourGradient(juce::Colour(0xffe6edf5),0,0,juce::Colour(0xffd4dfed),float(getWidth()),float(getHeight()),false));g.fillAll();
     g.setColour(juce::Colours::white.withAlpha(.82f));g.fillRect(0,0,getWidth(),74);
     g.setColour(line);g.drawHorizontalLine(74,0.f,float(getWidth()));
     auto logo=juce::Rectangle<float>(20,17,48,46);
@@ -339,7 +349,7 @@ void MataleTuneAudioProcessorEditor::paint(juce::Graphics& g){
     text(g,"Matale Tune",{82,13,290,34},28,ink,true);
     text(g,"PRO VOCAL PROCESSOR",{83,46,280,18},10.5f,muted);
     text(g,"AUTO CHARACTER",{getWidth()-650,7,210,17},10,muted,true);
-    text(g,"v0.10.0",{getWidth()-262,33,68,20},10,muted,false,juce::Justification::centredRight);
+    text(g,"v0.11.0",{getWidth()-262,33,68,20},10,muted,false,juce::Justification::centredRight);
     g.setColour(line);g.drawHorizontalLine(getHeight()-35,20.f,float(getWidth()-20));
     if(manualOpen){paintManual(g);return;}
     for(auto r:{analysisBounds,outputBounds,autoBounds,smoothBounds})card(g,r);

@@ -19,10 +19,11 @@ inline constexpr NativeParameter nativeParameters[]={
  {"includeDeess","Auto De-Esser",0,1,1,1,true},{"includeEq","Auto EQ",0,1,1,1,true},
  {"includePitch","Auto Pitch",0,1,1,1,true},{"includeReverb","Auto Reverb",0,1,1,1,true},
  {"includeDelay","Auto Delay",0,1,1,1,true},
- {"autoProfile","Auto character",0,4,1,0,false}
+ {"autoProfile","Auto character",0,4,1,0,false},
+ {"pitchResponse","Pitch style",0,5,1,0,false}
 };
 inline constexpr int nativeParameterCount=int(sizeof(nativeParameters)/sizeof(nativeParameters[0]));
-enum NativeIndex {Smooth,Harsh,Warmth,Presence,Deess,DeessHz,DeessThreshold,Denoise,NoiseThreshold,Opto,OptoMix,SidechainHz,Limit,Safety,AutoKey,IncludeSmooth,IncludeDynamics,IncludeDeess,IncludeEq,IncludePitch,IncludeReverb,IncludeDelay,AutoProfile};
+enum NativeIndex {Smooth,Harsh,Warmth,Presence,Deess,DeessHz,DeessThreshold,Denoise,NoiseThreshold,Opto,OptoMix,SidechainHz,Limit,Safety,AutoKey,IncludeSmooth,IncludeDynamics,IncludeDeess,IncludeEq,IncludePitch,IncludeReverb,IncludeDelay,AutoProfile,PitchResponse};
 using NativeValues=std::array<float,nativeParameterCount>;
 inline NativeValues nativeDefaults(){NativeValues a{};for(int i=0;i<nativeParameterCount;++i)a[size_t(i)]=nativeParameters[i].initial;return a;}
 struct KeyEstimate {int root=0,scale=0;float score=0,margin=0;bool confident=false;};
@@ -45,6 +46,19 @@ inline void applyCharacter(NativeProposal& p,int profile){
     if(profile==2){core(14,1);core(17,1);core(26,-1);extra(Warmth,20);extra(Presence,-5);extra(Smooth,15);core(4,10);}
     if(profile==3){core(23,1.5f);core(26,2);extra(Presence,18);extra(Deess,12);core(31,.015f);}
     if(profile==4){if(p.coreChanged[2])p.core[2]=1;if(p.coreChanged[4])p.core[4]=5;if(p.coreChanged[5])p.core[5]=0;if(p.coreChanged[7])p.core[7]=100;core(28,.04f);core(31,.02f);}
+}
+// Natural-mode response modifiers. Legacy Hard Tune retains its original timing.
+inline void applyPitchResponse(Params& p,int style){
+    if(p.style!=0)return;
+    switch(style){
+    case 1:p.retune*=1.8f;p.humanize=std::min(100.f,p.humanize*1.6f);p.correction*=.9f;break;
+    case 2:p.retune*=.55f;p.humanize*=.4f;break;
+    case 3:p.retune*=.8f;p.humanize=std::min(100.f,p.humanize*1.1f);p.correction*=.96f;break;
+    case 4:p.retune*=.4f;p.humanize*=.15f;break;
+    case 5:p.retune*=2.2f;p.humanize=std::min(100.f,p.humanize*1.8f);p.correction*=.85f;break;
+    default:break;
+    }
+    p.retune=std::clamp(p.retune,1.f,150.f);
 }
 class NativeAuto {
     double rate=48000,sum=0;float peak=0;std::array<double,8> low{};std::array<double,5> bands{};std::array<double,4> coefficients{};
