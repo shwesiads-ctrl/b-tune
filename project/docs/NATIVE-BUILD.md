@@ -125,3 +125,12 @@ EQ, Compressor, Space and Vocal Cleanup each have five ready-made choices in
 the Manual page header. Selecting one changes only that module. Manually
 modified settings display Custom; Save/Load retains the combined settings.
 See NATIVE-PRESETS.md for the recipes and test each dropdown during playback.
+
+## Reference-inspired interface and Default (0.13.0)
+
+The native interface adopts the supplied reference's pale-blue canvas, white
+rounded cards, pill controls, solid-blue active navigation and white circular
+AUTO control with a blue analysis arc. Vocal content, branding and all existing
+controls remain native and live. Global Default is in the permanent header;
+page Default is inside Manual. See NATIVE-PRESETS.md for exactly which values
+each reset includes. Check both while a vocal plays and verify Save/Load recall.

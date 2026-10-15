@@ -5,8 +5,8 @@ const juce::String uiFont="Segoe UI";
 #else
 const juce::String uiFont="DejaVu Sans";
 #endif
-const juce::Colour ink(0xff102d53), muted(0xff607a9c), blue(0xff1685ff), cyan(0xff52d8f5);
-const juce::Colour line(0xffc7d4e3), green(0xff13cda0);
+const juce::Colour ink(0xff192238), muted(0xff6e7a91), blue(0xff245ef4), cyan(0xff73a7ff);
+const juce::Colour line(0xffd3e0ec), green(0xff13cda0);
 void text(juce::Graphics& g, const juce::String& s, juce::Rectangle<int> bounds,
           float size = 14.f, juce::Colour colour = ink, bool bold = false,
           juce::Justification justify = juce::Justification::centredLeft) {
@@ -14,11 +14,10 @@ void text(juce::Graphics& g, const juce::String& s, juce::Rectangle<int> bounds,
     g.drawText(s, bounds, justify, true);
 }
 void card(juce::Graphics& g, juce::Rectangle<int> bounds) {
-    juce::DropShadow(juce::Colour(0x26304b6a),10,{0,4}).drawForRectangle(g,bounds.reduced(3));
-    g.setGradientFill(juce::ColourGradient(juce::Colour(0xfffcfdff),float(bounds.getX()),float(bounds.getY()),juce::Colour(0xffedf2f8),float(bounds.getX()),float(bounds.getBottom()),false));
-    g.fillRoundedRectangle(bounds.toFloat(),11.f);
-    g.setColour(juce::Colour(0xffb5c5d8));g.drawRoundedRectangle(bounds.toFloat().reduced(.5f),11.f,1.2f);
-    g.setColour(juce::Colours::white.withAlpha(.9f));g.drawRoundedRectangle(bounds.toFloat().reduced(2),9.f,1.f);
+    const float radius=bounds.getWidth()>650?24.f:19.f;
+    juce::DropShadow(juce::Colour(0x163b5c82),16,{0,5}).drawForRectangle(g,bounds.reduced(5));
+    g.setColour(juce::Colours::white);g.fillRoundedRectangle(bounds.toFloat(),radius);
+    g.setColour(juce::Colour(0xffd7e3ee));g.drawRoundedRectangle(bounds.toFloat().reduced(.5f),radius,1.f);
 }
 void meter(juce::Graphics& g, juce::Rectangle<float> r, float peak) {
     g.setColour(juce::Colour(0xffe8eff6)); g.fillRoundedRectangle(r, r.getHeight() / 2);
@@ -56,26 +55,23 @@ void MataleLookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& b,
                                              const juce::Colour&, bool over, bool down) {
     auto r = b.getLocalBounds().toFloat().reduced(1);
     if (b.getComponentID() == "auto-orb") {
-        r = r.withSizeKeepingCentre(juce::jmin(r.getWidth(), r.getHeight()), juce::jmin(r.getWidth(), r.getHeight()));
-        g.setColour(juce::Colour(0xffe2f5ff)); g.fillEllipse(r);
-        g.setColour(cyan.withAlpha(.48f)); g.drawEllipse(r.reduced(3), 5);
-        g.setColour(juce::Colours::white); g.drawEllipse(r.reduced(9), 2);
-        auto inner = r.reduced(14);
-        g.setGradientFill(juce::ColourGradient(cyan, inner.getX(), inner.getY(),
-                          juce::Colour(down ? 0xff0044d0 : 0xff0755ef), inner.getCentreX(), inner.getBottom(), false));
-        g.fillEllipse(inner);
-        g.setColour(juce::Colours::white.withAlpha(.9f)); g.drawEllipse(inner.reduced(1), 2);
-    } else {
-        g.setColour(b.getToggleState() ? juce::Colour(0xffe6f3ff) : over ? juce::Colour(0xffedf5fc) : juce::Colour(0xfff8fbfe));
-        g.fillRoundedRectangle(r, 11);
-        if (b.getComponentID() == "manual") {
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff168bff),0,0,juce::Colour(0xff0658e5),r.getRight(),r.getBottom(),false));
-            g.fillRoundedRectangle(r,11);
-        }else {g.setColour(line);g.drawRoundedRectangle(r,11,1); }
+        r=r.withSizeKeepingCentre(juce::jmin(r.getWidth(),r.getHeight()),juce::jmin(r.getWidth(),r.getHeight())).reduced(5);
+        juce::Path disc;disc.addEllipse(r.reduced(10));juce::DropShadow(juce::Colour(0x203a5f8a),12,{0,5}).drawForPath(g,disc);
+        g.setColour(juce::Colours::white);g.fillEllipse(r.reduced(10));
+        float radius=r.getWidth()*.5f-3;auto centre=r.getCentre();
+        juce::Path track,arc;track.addCentredArc(centre.x,centre.y,radius,radius,0,-2.4f,2.4f,true);
+        float amount=b.isEnabled()?.78f:juce::jlimit(.03f,1.f,float(b.getProperties().getWithDefault("progress",0.f)));
+        arc.addCentredArc(centre.x,centre.y,radius,radius,0,-2.4f,-2.4f+4.8f*amount,true);
+        g.setColour(line);g.strokePath(track,juce::PathStrokeType(4));g.setColour(blue);g.strokePath(arc,juce::PathStrokeType(4.5f,juce::PathStrokeType::curved,juce::PathStrokeType::rounded));
+    }else{
+        const bool active=b.getComponentID()=="manual"||b.getToggleState();
+        g.setColour(active?(down?blue.darker(.15f):blue):over?juce::Colour(0xffedf3ff):juce::Colours::white);
+        g.fillRoundedRectangle(r,r.getHeight()*.46f);
+        if(!active){g.setColour(line);g.drawRoundedRectangle(r,r.getHeight()*.46f,1);}
     }
 }
 void MataleLookAndFeel::drawButtonText(juce::Graphics& g, juce::TextButton& b, bool over, bool down) {
-    if(b.getComponentID()=="manual"){
+    if(b.getComponentID()=="manual"||b.getToggleState()){
         text(g,b.getButtonText(),b.getLocalBounds(),13.f,juce::Colours::white,true,juce::Justification::centred);return;
     }
     if (b.getComponentID() != "auto-orb") {
@@ -89,9 +85,14 @@ void MataleLookAndFeel::drawButtonText(juce::Graphics& g, juce::TextButton& b, b
     sparkle.lineTo(float(cx+5),float(cy-39)); sparkle.lineTo(float(cx),float(cy-26));
     sparkle.lineTo(float(cx-5),float(cy-39)); sparkle.lineTo(float(cx-18),float(cy-44));
     sparkle.lineTo(float(cx-5),float(cy-49)); sparkle.closeSubPath();
-    g.setColour(juce::Colours::white.withAlpha(b.isEnabled()?1.f:.6f)); g.fillPath(sparkle);
-    text(g,b.getButtonText(),{0,cy-14,r.getWidth(),38},b.isEnabled()?27.f:19.f,juce::Colours::white,true,juce::Justification::centred);
-    text(g,"3 sec vocal analysis",{0,cy+28,r.getWidth(),22},11.f,juce::Colours::white.withAlpha(.8f),false,juce::Justification::centred);
+    g.setColour(blue.withAlpha(b.isEnabled()?1.f:.6f)); g.fillPath(sparkle);
+    text(g,b.getButtonText(),{0,cy-14,r.getWidth(),38},b.isEnabled()?29.f:19.f,blue,true,juce::Justification::centred);
+    text(g,"3 sec vocal analysis",{0,cy+28,r.getWidth(),22},11.f,muted,false,juce::Justification::centred);
+}
+void MataleLookAndFeel::drawComboBox(juce::Graphics& g,int w,int h,bool,int,int,int,int,juce::ComboBox& box){
+    auto r=juce::Rectangle<float>(.5f,.5f,float(w)-1,float(h)-1);g.setColour(box.isEnabled()?juce::Colours::white:juce::Colour(0xfff2f6fa));g.fillRoundedRectangle(r,11);
+    g.setColour(line);g.drawRoundedRectangle(r,11,1);juce::Path arrow;arrow.startNewSubPath(float(w-23),h*.44f);arrow.lineTo(float(w-18),h*.59f);arrow.lineTo(float(w-13),h*.44f);
+    g.setColour(muted);g.strokePath(arrow,juce::PathStrokeType(1.5f,juce::PathStrokeType::curved,juce::PathStrokeType::rounded));
 }
 void MataleLookAndFeel::drawToggleButton(juce::Graphics& g,juce::ToggleButton& button,bool over,bool){
     auto r=button.getLocalBounds();auto box=juce::Rectangle<float>(16,16).withCentre({12.f,float(r.getCentreY())});
@@ -110,12 +111,12 @@ void MataleLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int w,
     juce::Path track, value;
     track.addCentredArc(centre.x, centre.y, radius, radius, 0, start, end, true);
     value.addCentredArc(centre.x, centre.y, radius, radius, 0, start, start + position * (end-start), true);
-    g.setColour(line); g.strokePath(track, juce::PathStrokeType(5, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-    g.setGradientFill(juce::ColourGradient(cyan,r.getX(),r.getY(),blue,r.getRight(),r.getBottom(),false)); g.strokePath(value, juce::PathStrokeType(5, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    g.setColour(line); g.strokePath(track, juce::PathStrokeType(3.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    g.setGradientFill(juce::ColourGradient(cyan,r.getX(),r.getY(),blue,r.getRight(),r.getBottom(),false)); g.strokePath(value, juce::PathStrokeType(3.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
     auto disc = juce::Rectangle<float>(radius*1.65f, radius*1.65f).withCentre(centre);
     juce::DropShadow(juce::Colour(0x253b6a98),6,{0,3}).drawForPath(g,[&]{juce::Path p;p.addEllipse(disc);return p;}());
     g.setGradientFill(juce::ColourGradient(juce::Colours::white, disc.getX(), disc.getY(),
-                       juce::Colour(0xffcfdae8), disc.getRight(), disc.getBottom(), false));
+                       juce::Colour(0xfff1f6fc), disc.getRight(), disc.getBottom(), false));
     g.fillEllipse(disc);g.setColour(juce::Colours::white);g.drawEllipse(disc.reduced(1),1.5f);
     float angle = start + position * (end-start);
     g.setColour(blue);
@@ -136,10 +137,12 @@ MataleTuneAudioProcessorEditor::MataleTuneAudioProcessorEditor(MataleTuneAudioPr
     for(int i=0;i<7;++i){addAndMakeVisible(includes[size_t(i)]);includes[size_t(i)].setButtonText(includeNames[i]);buttons.push_back(std::make_unique<BA>(p.parameters,matale::nativeParameters[matale::IncludeSmooth+i].id,includes[size_t(i)]));}
     const char* ids[]={"vocalSmooth","vocalWarmth","vocalPresence"};const char* labels[]={"Smooth amount","Vocal warmth","Presence"};
     for(int i=0;i<3;++i){auto& knob=knobs[size_t(i)];addAndMakeVisible(knob);addAndMakeVisible(knobLabels[size_t(i)]);knobLabels[size_t(i)].setText(labels[i],juce::dontSendNotification);knobLabels[size_t(i)].setFont(juce::FontOptions(11.f));knobLabels[size_t(i)].setJustificationType(juce::Justification::centred);knob.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);knob.setTextBoxStyle(juce::Slider::TextBoxBelow,false,72,22);knob.setTextValueSuffix("%");knob.setTitle(labels[i]);knob.setDoubleClickReturnValue(true,matale::nativeParameters[i==0?matale::Smooth:i==1?matale::Warmth:matale::Presence].initial);sliders.push_back(std::make_unique<SA>(p.parameters,ids[i],knob));}
-    peakReset.onClick=[this]{processor.requestPeakReset.store(true);};status.setFont(juce::FontOptions(12.f));status.setColour(juce::Label::textColourId,muted);status.setText("Matale Tune 0.12.0 DAW preview | Play a vocal and press AUTO.",juce::dontSendNotification);
+    peakReset.onClick=[this]{processor.requestPeakReset.store(true);};status.setFont(juce::FontOptions(12.f));status.setColour(juce::Label::textColourId,muted);status.setText("Matale Tune 0.13.0 DAW preview | Play a vocal and press AUTO.",juce::dontSendNotification);
     addAndMakeVisible(manualButton);manualButton.setComponentID("manual");
     manualButton.onClick=[this]{showManual(!manualOpen);};
     addChildComponent(manualPanel);manualPanel.addAndMakeVisible(manualPage);
+    manualPanel.addAndMakeVisible(moduleDefault);moduleDefault.setComponentID("module-default");
+    moduleDefault.onClick=[this]{noticeProfile=-1;presetNotice=processor.resetDefaults(manualPage.getSelectedId()-1)?"This module restored to Default.":"Wait for Auto analysis to finish before restoring Default.";noticeUntil=juce::Time::getMillisecondCounterHiRes()+5000;};
     manualPanel.addAndMakeVisible(modulePreset);modulePreset.setComponentID("module-preset");
     modulePreset.onChange=[this]{int index=modulePreset.getSelectedId()-2;if(index<0)return;
         noticeProfile=-1;
@@ -161,6 +164,8 @@ MataleTuneAudioProcessorEditor::MataleTuneAudioProcessorEditor(MataleTuneAudioPr
         else {noticeProfile=factoryPreset.getSelectedId()-1;presetNotice=factoryPreset.getText()+" preset applied. Press AUTO to adapt it to your vocal.";}
         noticeUntil=juce::Time::getMillisecondCounterHiRes()+6000;
     };
+    addAndMakeVisible(defaultButton);defaultButton.setComponentID("global-default");
+    defaultButton.onClick=[this]{noticeProfile=-1;presetNotice=processor.resetDefaults()?"All settings restored to Default.":"Wait for Auto analysis to finish before restoring Default.";noticeUntil=juce::Time::getMillisecondCounterHiRes()+5000;};
     addAndMakeVisible(saveButton);addAndMakeVisible(loadButton);
     saveButton.onClick=[this]{choosePreset(true);};loadButton.onClick=[this]{choosePreset(false);};
     auto addControl=[this,&p](const char* id,const char* name,float initial,int page,bool boolean,juce::StringArray options={}){
@@ -179,7 +184,7 @@ MataleTuneAudioProcessorEditor::MataleTuneAudioProcessorEditor(MataleTuneAudioPr
             manualPanel.addAndMakeVisible(*control.knob);
             control.knob->setColour(juce::Slider::textBoxTextColourId,ink);
             control.knob->setColour(juce::Slider::textBoxBackgroundColourId,juce::Colours::white);
-            control.knob->setColour(juce::Slider::textBoxOutlineColourId,line);
+            control.knob->setColour(juce::Slider::textBoxOutlineColourId,juce::Colours::transparentBlack);
             control.knob->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
             control.knob->setTextBoxStyle(juce::Slider::TextBoxBelow,false,95,24);
             control.knob->setDoubleClickReturnValue(true,initial);
@@ -216,6 +221,7 @@ void MataleTuneAudioProcessorEditor::resized(){
     autoBounds={pad,y+top+gap,left,available-top-gap};
     smoothBounds={outputBounds.getX(),autoBounds.getY(),outputBounds.getWidth(),autoBounds.getHeight()};
     manualButton.setBounds(getWidth()-184,24,164,36);
+    defaultButton.setBounds(getWidth()-266,28,74,32);
     factoryPreset.setBounds(getWidth()-650,28,210,32);
     saveButton.setBounds(getWidth()-430,28,74,32);loadButton.setBounds(getWidth()-348,28,74,32);
     manualPanel.setBounds(pad,y,w,available);layoutManual();
@@ -236,7 +242,7 @@ void MataleTuneAudioProcessorEditor::resized(){
 }
 void MataleTuneAudioProcessorEditor::showManual(bool open){
     manualOpen=open;
-    for(auto* child:getChildren())if(child!=&manualPanel&&child!=&manualButton&&child!=&status&&child!=&credit&&child!=&telegram&&child!=&factoryPreset&&child!=&saveButton&&child!=&loadButton)child->setVisible(!open);
+    for(auto* child:getChildren())if(child!=&manualPanel&&child!=&manualButton&&child!=&status&&child!=&credit&&child!=&telegram&&child!=&factoryPreset&&child!=&saveButton&&child!=&loadButton&&child!=&defaultButton)child->setVisible(!open);
     manualPanel.setVisible(open);manualButton.setButtonText(open?"Back to Auto":"Manual controls");
     layoutManual();repaint();
 }
@@ -259,6 +265,7 @@ void MataleTuneAudioProcessorEditor::choosePreset(bool saving){
 void MataleTuneAudioProcessorEditor::layoutManual(){
     const int page=manualPage.getSelectedId()-1,startX=184,width=manualPanel.getWidth()-204,height=manualPanel.getHeight();
     manualModules.clear();manualPage.setBounds(0,0,1,1);manualPage.setVisible(false);
+    moduleDefault.setBounds(manualPanel.getWidth()-(page>0?342:102),12,80,32);
     modulePreset.setBounds(manualPanel.getWidth()-252,12,232,32);modulePreset.setVisible(page>0);
     modulePreset.clear(juce::dontSendNotification);modulePreset.addItem("Custom",1);modulePreset.setItemEnabled(1,false);
     auto moduleNames=processor.modulePresetNames(page);for(int i=0;i<moduleNames.size();++i)modulePreset.addItem(moduleNames[i],i+2);
@@ -328,8 +335,8 @@ void MataleTuneAudioProcessorEditor::paintManual(juce::Graphics& g){
     }
     if(page>=3){const char* space[]={"DELAY","REVERB","OUTPUT"};const char* cleanup[]={"TONE / SMOOTH","DE-ESSER","DENOISE"};for(int i=0;i<3;++i)text(g,page==3?space[i]:cleanup[i],manualModules[size_t(i)].reduced(12).withHeight(24),11,blue,true);}
 }
-void MataleTuneAudioProcessorEditor::timerCallback(){int state=processor.autoState.load(std::memory_order_acquire),last=processor.lastAutoStatus.load();autoButton.setEnabled(state!=1&&state!=2);autoButton.setButtonText(state==1?"LISTENING":"AUTO");
-    juce::String message="Matale Tune 0.12.0 DAW preview | Play a vocal and press AUTO.";
+void MataleTuneAudioProcessorEditor::timerCallback(){int state=processor.autoState.load(std::memory_order_acquire),last=processor.lastAutoStatus.load();autoButton.setEnabled(state!=1&&state!=2);autoButton.setButtonText(state==1?"LISTENING":"AUTO");autoButton.getProperties().set("progress",processor.progress.load());
+    juce::String message="Matale Tune 0.13.0 DAW preview | Play a vocal and press AUTO.";
     if(state==1)message="Listening: "+juce::String(int(processor.progress.load()*100))+"% | Keep the DAW playing a voiced phrase.";else if(last==3)message="No stable vocal found. Play a voiced phrase and press AUTO again.";else if(last==2)message="Auto applied | Key uncertain: retry on a phrase with several different notes. Chromatic pitch retained.";else if(last==1){int root=processor.detectedRoot.load();const char* names[]={"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};message="Auto applied | EQ, dynamics, smoothing and included effects ready.";if(root>=0)message+=" Key: "+juce::String(names[root])+ (processor.detectedScale.load()==1?" Major":" Minor");}
     const bool opto=processor.parameters.getRawParameterValue("optoMode")->load()>.5f;
     for(auto& c:manualControls)if(c.knob){auto id=c.knob->getComponentID();
@@ -350,7 +357,7 @@ void MataleTuneAudioProcessorEditor::timerCallback(){int state=processor.autoSta
     repaint();
 }
 void MataleTuneAudioProcessorEditor::paint(juce::Graphics& g){
-    g.setGradientFill(juce::ColourGradient(juce::Colour(0xffe6edf5),0,0,juce::Colour(0xffd4dfed),float(getWidth()),float(getHeight()),false));g.fillAll();
+    g.setGradientFill(juce::ColourGradient(juce::Colour(0xffeaf3f9),0,0,juce::Colour(0xffe3edf7),float(getWidth()),float(getHeight()),false));g.fillAll();
     g.setColour(juce::Colours::white.withAlpha(.82f));g.fillRect(0,0,getWidth(),74);
     g.setColour(line);g.drawHorizontalLine(74,0.f,float(getWidth()));
     auto logo=juce::Rectangle<float>(20,17,48,46);
@@ -359,9 +366,9 @@ void MataleTuneAudioProcessorEditor::paint(juce::Graphics& g){
     g.setGradientFill(juce::ColourGradient(cyan,29,28,juce::Colour(0xff1959f4),60,54,false));
     g.strokePath(mark,juce::PathStrokeType(6.5f,juce::PathStrokeType::curved,juce::PathStrokeType::rounded));
     text(g,"Matale Tune",{82,13,290,34},28,ink,true);
-    text(g,"PRO VOCAL PROCESSOR",{83,46,280,18},10.5f,muted);
+    text(g,"PRO VOCAL PROCESSOR / v0.13.0",{83,46,300,18},10.5f,muted);
     text(g,"AUTO CHARACTER",{getWidth()-650,7,210,17},10,muted,true);
-    text(g,"v0.12.0",{getWidth()-262,33,68,20},10,muted,false,juce::Justification::centredRight);
+
     g.setColour(line);g.drawHorizontalLine(getHeight()-35,20.f,float(getWidth()-20));
     if(manualOpen){paintManual(g);return;}
     for(auto r:{analysisBounds,outputBounds,autoBounds,smoothBounds})card(g,r);

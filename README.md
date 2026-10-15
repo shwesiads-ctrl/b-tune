@@ -329,3 +329,14 @@ Close the DAW and replace the whole `Matale Tune.vst3` bundle in
 `C:\Program Files\Common Files\VST3\`, then reopen/rescan.
 
 ![Actual Windows module preset selector](Native-Manual-Preview.png)
+
+## Default and reference-inspired UI (0.13.0)
+
+A permanent **Default** button restores all settings. Each Manual page also has
+a **Default** for its own controls. The supplied UI reference informs the pale
+blue background, white rounded cards/pills, solid-blue active navigation and
+white circular AUTO control with a blue analysis arc. The vocal workflow,
+branding, module presets and Save/Load remain available.
+
+See [Default scope and usage](project/docs/NATIVE-PRESETS.md). Windows build
+validation is pending for this revision.

@@ -156,3 +156,13 @@ Binary commit: `7e3b2dd70415fa9884875bacb80c01e77cf5d2ee`.
 Pluginval GUI tests and the separate Steinberg validator remain skipped as
 previously documented. DAW listening, recall and native file-dialog interaction
 remain host checks.
+
+## Default and reference UI 0.13.0
+
+New actual-processor tests check every global default, each page reset's scope
+and unchanged parameters outside it, invalid page/pending-Auto rejection, and
+actual GUI button callbacks for global Default and all five page Defaults.
+Existing module presets, full file round-trip, compatibility, style, Auto,
+realtime and layout checks remain enabled. Linux native build and all 10 CTest
+suites passed. Auto and EQ screenshots were inspected against the reference
+direction. Windows validation is pending for this revision.

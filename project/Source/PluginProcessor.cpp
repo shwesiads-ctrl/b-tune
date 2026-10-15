@@ -71,6 +71,17 @@ int MataleTuneAudioProcessor::modulePresetIndex(int page)const{
     }
     return -1;
 }
+bool MataleTuneAudioProcessor::resetDefaults(int page){
+    if(page < -1||page>4||requestAuto.load()||autoState.load()==1||autoState.load()==2)return false;
+    auto set=[this](const char* id,float v){auto* p=parameters.getParameter(id);p->beginChangeGesture();p->setValueNotifyingHost(p->convertTo0to1(v));p->endChangeGesture();};
+    for(int i=0;i<matale::parameterCount;++i){const auto& d=matale::parameterList[i];
+        if(page==-1||(d.page==page&&(page!=0||i!=3)))set(d.id,d.initial);
+    }
+    for(int i=0;i<matale::nativeParameterCount;++i){bool included=page==-1||(page==0&&i==matale::PitchResponse)||(page==1&&i>=matale::Opto&&i<=matale::Limit)||(page==3&&i==matale::Safety)||(page==4&&i<=matale::NoiseThreshold);
+        if(included)set(matale::nativeParameters[i].id,matale::nativeParameters[i].initial);
+    }
+    lastAutoStatus.store(0);if(page==-1){autoState.store(0);detectedRoot.store(-1);}return true;
+}
 bool MataleTuneAudioProcessor::applyModulePreset(int page,int index){
     const auto& recipes=matale::modulePresets(page);
     if(index<0||index>=int(recipes.size())||requestAuto.load()||autoState.load()==1||autoState.load()==2)return false;

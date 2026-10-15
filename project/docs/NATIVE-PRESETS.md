@@ -104,3 +104,24 @@ Opto presets use the existing program-dependent timing; Punch uses the standard
 compressor with adjustable attack/release/ratio. Slapback uses a quarter-beat
 delay (125 ms at 120 BPM); Quarter Delay uses one beat. Denoise remains a
 quiet-noise expander rather than learned broadband noise removal.
+
+## Default actions (0.13.0)
+
+The permanent header **Default** restores all 59 parameter defaults, including
+Key C / Chromatic, Natural mode, Neutral response Style, output gain/tempo,
+safety, processing power, Auto character and inclusion switches. It keeps the
+current editor page open and restores parameters without restarting the audio
+engine or changing its reported latency.
+
+The **Default** inside a Manual page restores that page only:
+
+- Pitch / Key: key, scale, tuning mode, response knobs and Style; global
+  processing power and Auto inclusion switches are retained.
+- Compressor: threshold, ratio, attack/release, makeup and opto controls.
+- EQ: the five frequency/gain/Q bands.
+- Space / Output: delay, reverb, output gain, fallback tempo and output safety.
+- Vocal Cleanup: smoothing, tone, harsh control, de-esser and quiet-noise controls.
+
+Both actions wait until pending/active Auto analysis finishes. They notify host
+parameters and remain covered by normal Save/Load and DAW project state.
+Default is a parameter reset; it does not delete user preset files.

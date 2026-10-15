@@ -5,6 +5,7 @@ public:
     MataleLookAndFeel();
     void drawButtonBackground(juce::Graphics&,juce::Button&,const juce::Colour&,bool,bool) override;
     void drawButtonText(juce::Graphics&,juce::TextButton&,bool,bool) override;
+    void drawComboBox(juce::Graphics&,int,int,bool,int,int,int,int,juce::ComboBox&) override;
     void drawToggleButton(juce::Graphics&,juce::ToggleButton&,bool,bool) override;
     void drawRotarySlider(juce::Graphics&,int,int,int,int,float,float,float,juce::Slider&) override;
 };
@@ -19,7 +20,7 @@ private:
     juce::Component manualPanel;
     juce::TextButton manualButton{"Manual controls"};
     juce::ComboBox manualPage,factoryPreset,modulePreset;
-    juce::TextButton saveButton{"Save"},loadButton{"Load"};
+    juce::TextButton saveButton{"Save"},loadButton{"Load"},defaultButton{"Default"},moduleDefault{"Default"};
     std::array<juce::TextButton,5> pageTabs;
     std::vector<juce::Rectangle<int>> manualModules;
     std::unique_ptr<juce::FileChooser> presetChooser;

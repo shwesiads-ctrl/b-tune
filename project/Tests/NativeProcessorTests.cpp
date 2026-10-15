@@ -12,6 +12,8 @@ void manualCheck(MataleTuneAudioProcessor& p,juce::AudioProcessorEditor* editor)
     juce::ComboBox* factory=nullptr;for(auto* child:editor->getChildren())if(child->getComponentID()=="factory-preset")factory=dynamic_cast<juce::ComboBox*>(child);
     check(factory!=nullptr,"Factory preset selector missing");factory->setSelectedId(5,juce::sendNotificationSync);
     check(value(p,"autoProfile")==4&&value(p,"style")==1,"Factory preset UI is not connected");p.setStateInformation(before.getData(),int(before.getSize()));
+    juce::TextButton* defaults=nullptr;for(auto* child:editor->getChildren())if(child->getComponentID()=="global-default")defaults=dynamic_cast<juce::TextButton*>(child);
+    check(defaults!=nullptr,"Global Default button missing");defaults->onClick();check(value(p,"key")==0&&value(p,"scale")==0&&value(p,"pitchResponse")==0,"Global Default UI not connected");p.setStateInformation(before.getData(),int(before.getSize()));
     juce::TextButton* manual=nullptr;for(auto* child:editor->getChildren())if(child->getComponentID()=="manual")manual=dynamic_cast<juce::TextButton*>(child);
     check(manual!=nullptr,"Manual button missing");manual->onClick();
     juce::Component* panel=nullptr;juce::ComboBox* pages=nullptr;
@@ -26,6 +28,10 @@ void manualCheck(MataleTuneAudioProcessor& p,juce::AudioProcessorEditor* editor)
             if(auto* choice=dynamic_cast<juce::ComboBox*>(child)){choice->setSelectedId(2,juce::sendNotificationSync);if(value(p,id.toRawUTF8())!=1)std::cerr<<"Selector "<<id<<" value="<<value(p,id.toRawUTF8())<<" selected="<<choice->getSelectedId()<<"\n";check(value(p,id.toRawUTF8())==1,"Manual selector does not update processor");++edited;}
             if(auto* toggle=dynamic_cast<juce::ToggleButton*>(child)){toggle->setToggleState(false,juce::sendNotificationSync);check(value(p,id.toRawUTF8())==0,"Manual toggle does not update processor");++edited;}
         }
+        juce::TextButton* reset=nullptr;for(auto* child:panel->getChildren())if(child->getComponentID()=="module-default")reset=dynamic_cast<juce::TextButton*>(child);
+        check(reset&&reset->isVisible(),"Module Default button missing");reset->onClick();
+        const char* checkIds[]={"retune","threshold","eq2g","output","vocalSmooth"};const float defaultValues[]={35,-18,0,0,20};
+        check(std::abs(value(p,checkIds[page-1])-defaultValues[page-1])<.011f,"Module Default UI not connected");
         if(page>1){juce::ComboBox* module=nullptr;for(auto* child:panel->getChildren())if(child->getComponentID()=="module-preset")module=dynamic_cast<juce::ComboBox*>(child);
             check(module&&module->isVisible(),"Module preset selector missing");module->setSelectedId(2,juce::sendNotificationSync);check(p.modulePresetIndex(page-1)==0,"Module preset UI is not connected");}
         if(auto path=juce::SystemStats::getEnvironmentVariable("MATALE_NATIVE_SCREENSHOT",{});path.isNotEmpty()){
@@ -40,6 +46,27 @@ void manualCheck(MataleTuneAudioProcessor& p,juce::AudioProcessorEditor* editor)
         check(out.openedOk()&&juce::PNGImageFormat().writeImageToStream(editor->createComponentSnapshot(editor->getLocalBounds()),out),"Cannot save manual preview");
     }
     manual->onClick();check(!panel->isVisible(),"Manual did not return to Auto");editor->setSize(1200,720);layoutCheck(*editor);p.setStateInformation(before.getData(),int(before.getSize()));
+}
+void defaultCheck(MataleTuneAudioProcessor& p){
+    juce::MemoryBlock original;p.getStateInformation(original);
+    for(int page=0;page<5;++page){
+        p.applyFactoryPreset(4);set(p,"key",8);set(p,"scale",2);set(p,"output",-8);set(p,"bpm",150);set(p,"outputSafety",0);set(p,"auto",0);set(p,"pitchResponse",5);set(p,"vocalSmooth",74);set(p,"eq2g",5);
+        std::vector<float> before;for(auto* parameter:p.getParameters())before.push_back(parameter->getValue());
+        check(p.resetDefaults(page),"Module Default failed");
+        for(int i=0;i<matale::parameterCount;++i){const auto& d=matale::parameterList[i];bool changed=d.page==page&&(page!=0||i!=3);
+            float expected=changed?d.initial:p.parameters.getParameter(d.id)->convertFrom0to1(before[size_t(i)]);
+            check(std::abs(value(p,d.id)-expected)<.011f,"Module Default changed another module or missed a core default");
+        }
+        for(int i=0;i<matale::nativeParameterCount;++i){const auto& d=matale::nativeParameters[i];bool changed=(page==0&&i==matale::PitchResponse)||(page==1&&i>=matale::Opto&&i<=matale::Limit)||(page==3&&i==matale::Safety)||(page==4&&i<=matale::NoiseThreshold);
+            float expected=changed?d.initial:p.parameters.getParameter(d.id)->convertFrom0to1(before[size_t(matale::parameterCount+i)]);
+            check(std::abs(value(p,d.id)-expected)<.011f,"Module Default changed another module or missed a vocal default");
+        }
+    }
+    check(p.resetDefaults(),"Global Default failed");
+    for(const auto& d:matale::parameterList)check(std::abs(value(p,d.id)-d.initial)<.011f,"Global core Default mismatch");
+    for(const auto& d:matale::nativeParameters)check(std::abs(value(p,d.id)-d.initial)<.011f,"Global vocal Default mismatch");
+    p.requestAuto.store(true);check(!p.resetDefaults(),"Default replaced pending Auto");p.requestAuto.store(false);check(!p.resetDefaults(99),"Invalid Default page accepted");
+    p.setStateInformation(original.getData(),int(original.getSize()));
 }
 void moduleCheck(MataleTuneAudioProcessor& p){
     juce::MemoryBlock original;p.getStateInformation(original);
@@ -105,7 +132,7 @@ int main(){try{juce::ScopedJuceInitialiser_GUI init;MataleTuneAudioProcessor p;p
     juce::Timer::callAfterDelay(250,[]{juce::MessageManager::getInstance()->stopDispatchLoop();});juce::MessageManager::getInstance()->runDispatchLoop();if(failure)std::rethrow_exception(failure);check(closedVerified&&editor!=nullptr,"Auto must apply on message thread with editor closed");check(value(p,"key")==0&&value(p,"scale")==1,"Native Auto did not find C Major");check(value(p,"correction")==100&&value(p,"style")==0,"Natural pitch Auto not applied");check(value(p,"vocalSmooth")>0&&value(p,"deessAmount")>0,"Native vocal Auto missing");
     set(p,"vocalWarmth",27);set(p,"vocalPresence",15);set(p,"includeDelay",0);juce::MemoryBlock state;p.getStateInformation(state);MataleTuneAudioProcessor restored;restored.setStateInformation(state.getData(),int(state.getSize()));check(value(restored,"vocalWarmth")==27&&value(restored,"vocalPresence")==15&&value(restored,"includeDelay")==0,"Native state failed");
     auto legacy=p.parameters.copyState();for(int i=legacy.getNumChildren()-1;i>=0;--i){auto child=legacy.getChild(i);bool old=false;for(const auto& d:matale::parameterList)old|=child["id"].toString()==d.id;if(!old)legacy.removeChild(i,nullptr);}juce::MemoryBlock legacyData;if(auto xml=legacy.createXml())juce::AudioProcessor::copyXmlToBinary(*xml,legacyData);restored.setStateInformation(legacyData.getData(),int(legacyData.getSize()));check(value(restored,"vocalWarmth")==0&&value(restored,"outputSafety")==1,"Legacy state migration failed");
-    moduleCheck(p);presetCheck(p);
+    defaultCheck(p);moduleCheck(p);presetCheck(p);
     for(auto size:{juce::Point<int>(980,620),juce::Point<int>(1200,720),juce::Point<int>(1800,1000)}){editor->setSize(size.x,size.y);layoutCheck(*editor);}editor->setSize(1200,720);int knobs=0;for(auto* child:editor->getChildren())if(dynamic_cast<juce::Slider*>(child))++knobs;check(knobs==3,"Compact plugin must expose only Smooth/Warmth/Presence knobs");
     if(auto path=juce::SystemStats::getEnvironmentVariable("MATALE_NATIVE_SCREENSHOT",{});path.isNotEmpty()){juce::File file(path);file.deleteFile();juce::FileOutputStream out(file);check(out.openedOk(),"Cannot save UI preview");check(juce::PNGImageFormat().writeImageToStream(editor->createComponentSnapshot(editor->getLocalBounds()),out),"Cannot encode UI preview");}
     auto hostile=p.parameters.copyState();hostile.getChildWithProperty("id","vocalWarmth").setProperty("value",1.e20,nullptr);juce::MemoryBlock hostileData;if(auto xml=hostile.createXml())juce::AudioProcessor::copyXmlToBinary(*xml,hostileData);restored.setStateInformation(hostileData.getData(),int(hostileData.getSize()));check(value(restored,"vocalWarmth")==100,"State range validation failed");

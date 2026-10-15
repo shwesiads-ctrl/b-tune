@@ -35,6 +35,7 @@ public:
     std::atomic<int> autoState{0},lastAutoStatus{0},detectedRoot{-1},detectedScale{0};
     juce::StringArray modulePresetNames(int page) const;
     int modulePresetIndex(int page) const;
+    bool resetDefaults(int page=-1);
     bool applyModulePreset(int page,int index);
     bool applyFactoryPreset(int profile);
     bool savePreset(const juce::File&,juce::String& error);
