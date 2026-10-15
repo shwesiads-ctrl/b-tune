@@ -1,0 +1,2 @@
+PASS: actual worklet adapter stereo output, telemetry and Auto messages
+Native/WASM parity peak: 5.960464477539063e-8 RMS: 1.0683603498277698e-9

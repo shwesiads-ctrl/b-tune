@@ -1,0 +1,21 @@
+Test project /workspace/scratch/6725a8bf06e6/build-core
+    Start 1: yin
+1/8 Test #1: yin ..............................   Passed    0.03 sec
+    Start 2: scale
+2/8 Test #2: scale ............................   Passed    0.00 sec
+    Start 3: shift
+3/8 Test #3: shift ............................   Passed    0.03 sec
+    Start 4: dynamics
+4/8 Test #4: dynamics .........................   Passed    0.04 sec
+    Start 5: effects
+5/8 Test #5: effects ..........................   Passed    0.12 sec
+    Start 6: auto
+6/8 Test #6: auto .............................   Passed    0.01 sec
+    Start 7: stress
+7/8 Test #7: stress ...........................   Passed    0.08 sec
+    Start 8: realtime
+8/8 Test #8: realtime .........................   Passed    0.07 sec
+
+100% tests passed out of 8
+
+Total Test time (real) =   0.39 sec

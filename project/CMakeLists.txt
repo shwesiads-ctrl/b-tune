@@ -1,0 +1,60 @@
+cmake_minimum_required(VERSION 3.22)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+project(MataleTune VERSION 0.13.0 LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+option(MATALE_BUILD_PLUGIN "Build JUCE VST3/AU" ON)
+option(MATALE_SANITIZE "Address/undefined sanitizer on core tests" OFF)
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(MataleDSPTests Tests/DSPTests.cpp)
+    target_include_directories(MataleDSPTests PRIVATE Source)
+    if(MATALE_SANITIZE AND NOT MSVC)
+        target_compile_options(MataleDSPTests PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+        target_link_options(MataleDSPTests PRIVATE -fsanitize=address,undefined)
+    endif()
+    add_executable(MataleNativeVocalTests Tests/NativeVocalTests.cpp)
+    target_include_directories(MataleNativeVocalTests PRIVATE Source)
+    add_test(NAME native-vocal COMMAND MataleNativeVocalTests)
+    foreach(test yin scale shift dynamics effects auto stress realtime)
+        add_test(NAME ${test} COMMAND MataleDSPTests ${test})
+    endforeach()
+endif()
+if(NOT MATALE_BUILD_PLUGIN)
+    return()
+endif()
+if(DEFINED JUCE_DIR AND EXISTS "${JUCE_DIR}/CMakeLists.txt")
+    add_subdirectory("${JUCE_DIR}" "${CMAKE_BINARY_DIR}/JUCE")
+else()
+    include(FetchContent)
+    FetchContent_Declare(juce GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+        GIT_TAG 8.0.10 GIT_SHALLOW TRUE)
+    FetchContent_MakeAvailable(juce)
+endif()
+set(MATALE_FORMATS VST3)
+if(APPLE)
+    list(APPEND MATALE_FORMATS AU)
+endif()
+juce_add_plugin(MataleTune
+    COMPANY_NAME "Matale Audio" BUNDLE_ID "com.mataleaudio.mataletune"
+    PLUGIN_MANUFACTURER_CODE Mtla PLUGIN_CODE Mtn1
+    FORMATS ${MATALE_FORMATS} PRODUCT_NAME "Matale Tune"
+    IS_SYNTH FALSE NEEDS_MIDI_INPUT FALSE NEEDS_MIDI_OUTPUT FALSE
+    IS_MIDI_EFFECT FALSE EDITOR_WANTS_KEYBOARD_FOCUS FALSE
+    COPY_PLUGIN_AFTER_BUILD FALSE
+    VST3_CATEGORIES Fx "Pitch Shift"
+    AU_MAIN_TYPE kAudioUnitType_Effect)
+juce_generate_juce_header(MataleTune)
+target_sources(MataleTune PRIVATE Source/PluginProcessor.cpp Source/PluginEditor.cpp)
+target_compile_definitions(MataleTune PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
+target_link_libraries(MataleTune PRIVATE juce::juce_audio_utils juce::juce_audio_processors juce::juce_dsp
+    PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+if(BUILD_TESTING)
+    add_executable(MataleNativeProcessorTests Tests/NativeProcessorTests.cpp)
+    target_include_directories(MataleNativeProcessorTests PRIVATE Source
+        "${CMAKE_CURRENT_BINARY_DIR}/MataleTune_artefacts/JuceLibraryCode" "${JUCE_SOURCE_DIR}/modules")
+    target_compile_definitions(MataleNativeProcessorTests PRIVATE JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1)
+    target_link_libraries(MataleNativeProcessorTests PRIVATE MataleTune)
+    add_test(NAME native-processor COMMAND MataleNativeProcessorTests)
+    set_tests_properties(native-processor PROPERTIES TIMEOUT 60)
+endif()
