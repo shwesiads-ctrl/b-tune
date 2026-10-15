@@ -145,4 +145,14 @@ unchanged parameters outside the selected module, valid ranges, invalid-index
 and pending-Auto rejection, Custom detection after edits, GUI selection on all
 four pages and Save/Load of a combined set of module choices. Linux native
 build and all 10 CTest suites passed. EQ and Space screenshots were inspected
-for the new module selector. Windows validation is pending for this revision.
+for the new module selector. Windows run https://github.com/shwesiads-ctrl/b-tune/actions/runs/38707356917
+passed for source `d7cbb43794cbfaa8752df43a3ce5e6eae67dfa19`: MSVC x64 build,
+10/10 native suites and pluginval 1.0.4 strictness 5. The actual Windows EQ
+screenshot was inspected for the module selector. Published archive CRC,
+source/version, PE x64 module and SHA-256 were independently verified; the
+bundled source ZIP includes ModulePresets.h. Archive size: 3,726,796 bytes.
+SHA-256: `912087b8998f443627cbd729cbc0ee40fc67733968b4fc4e124ce57e7bb55ca6`.
+Binary commit: `7e3b2dd70415fa9884875bacb80c01e77cf5d2ee`.
+Pluginval GUI tests and the separate Steinberg validator remain skipped as
+previously documented. DAW listening, recall and native file-dialog interaction
+remain host checks.

@@ -172,7 +172,7 @@ A stereo-linked output safety limiter uses 128 samples of lookahead and a −0.4
 
 ## Native DAW preview
 
-[Latest Windows VST3: 0.11.0 with response styles and studio cards](https://github.com/shwesiads-ctrl/b-tune/raw/8c63a4a4c4542c89eeb95ebab0801766efb5517b/MataleTune-Windows-x64-VST3.zip)
+[Latest Windows VST3: 0.12.0 with per-module presets](https://github.com/shwesiads-ctrl/b-tune/raw/7e3b2dd70415fa9884875bacb80c01e77cf5d2ee/MataleTune-Windows-x64-VST3.zip)
 
 VST3/AU share a compact four-panel JUCE editor: Vocal Analysis, Output, Auto
 Mode and Vocal Smooth. Native Auto measures dry stereo audio, estimates key
@@ -311,5 +311,21 @@ presets. Selecting a module preset changes only that module; the other vocal
 settings stay intact. Modified settings display **Custom** automatically, and
 full Save/Load presets retain your combined settings.
 
-See [module preset choices](project/docs/NATIVE-PRESETS.md). Windows validation
-is pending for this revision.
+See [module preset choices](project/docs/NATIVE-PRESETS.md). Windows native
+tests and pluginval strictness 5 passed.
+
+### Verified Windows 0.12.0 download
+
+[Download Windows x64 VST3 0.12.0](https://github.com/shwesiads-ctrl/b-tune/raw/7e3b2dd70415fa9884875bacb80c01e77cf5d2ee/MataleTune-Windows-x64-VST3.zip)
+(3.73 MB) · [Windows build/test evidence](https://github.com/shwesiads-ctrl/b-tune/actions/runs/38707356917).
+
+Source `d7cbb43794cbfaa8752df43a3ce5e6eae67dfa19`: MSVC Windows x64 build,
+10/10 native suites and pluginval strictness 5 passed. All 20 module recipes,
+isolation, Custom matching, GUI selection and combined preset round-trip are
+covered by the actual native processor test. Archive CRC, source revision,
+version, SHA-256 and PE x64 module were independently checked.
+SHA-256: `912087b8998f443627cbd729cbc0ee40fc67733968b4fc4e124ce57e7bb55ca6`.
+Close the DAW and replace the whole `Matale Tune.vst3` bundle in
+`C:\Program Files\Common Files\VST3\`, then reopen/rescan.
+
+![Actual Windows module preset selector](Native-Manual-Preview.png)
