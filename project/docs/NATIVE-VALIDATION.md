@@ -127,4 +127,13 @@ New checks cover response-style bounds and Soft/Rap/Ballad behaviour, legacy
 Hard Tune timing preservation, round-trip of the new style field and migration
 of a 0.10.0 preset without that field. The existing GUI binding test now covers
 49 manual controls, including the new Style selector. Linux native build and all 10 CTest suites passed, and the revised EQ and Pitch
-screenshots were inspected. Windows validation is pending for this revision.
+screenshots were inspected. Windows run https://github.com/shwesiads-ctrl/b-tune/actions/runs/38705652203
+passed for source `d9113a98facb0159f0b32a9bd04c430cb90a657f`: MSVC x64 build,
+10/10 native CTest suites and pluginval 1.0.4 strictness 5. The Windows EQ
+screenshot was inspected for renamed bands, contrast and card boundaries.
+The ZIP CRC, source/version, PE x64 module and SHA-256 were independently
+verified. Size: 3,717,858 bytes. SHA-256:
+`90d6cadb3ced950734c6ce5ec3cab59e7d055c464869d93e1b1101f23d274378`.
+Binary commit: `8c63a4a4c4542c89eeb95ebab0801766efb5517b`.
+Pluginval GUI tests and the separate Steinberg validator remain skipped as
+previously documented. Listening and DAW-specific recall remain host checks.

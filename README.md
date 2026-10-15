@@ -172,7 +172,7 @@ A stereo-linked output safety limiter uses 128 samples of lookahead and a −0.4
 
 ## Native DAW preview
 
-[Latest Windows VST3: 0.10.0 with presets and grouped UI](https://github.com/shwesiads-ctrl/b-tune/raw/da1d18ad0973c53bb4ac9760cc327714d0b3e1f7/MataleTune-Windows-x64-VST3.zip)
+[Latest Windows VST3: 0.11.0 with response styles and studio cards](https://github.com/shwesiads-ctrl/b-tune/raw/8c63a4a4c4542c89eeb95ebab0801766efb5517b/MataleTune-Windows-x64-VST3.zip)
 
 VST3/AU share a compact four-panel JUCE editor: Vocal Analysis, Output, Auto
 Mode and Vocal Smooth. Native Auto measures dry stereo audio, estimates key
@@ -288,4 +288,18 @@ card borders, shadows, background contrast and band colours distinguish the
 control groups. Pitch / Key provides **Neutral / Soft / Tight / Pop / Rap /
 Ballad** response styles alongside the existing Natural / Hard Tune mode.
 Styles change the live Natural-mode pitch response; Save/Load retains them and
-older 0.10 preset files remain supported. Windows validation is pending.
+older 0.10 preset files remain supported. Windows native tests and pluginval strictness 5 passed.
+
+### Verified Windows 0.11.0 download
+
+[Download Windows x64 VST3 0.11.0](https://github.com/shwesiads-ctrl/b-tune/raw/8c63a4a4c4542c89eeb95ebab0801766efb5517b/MataleTune-Windows-x64-VST3.zip)
+(3.72 MB) · [Windows build/test evidence](https://github.com/shwesiads-ctrl/b-tune/actions/runs/38705652203).
+
+Source `d9113a98facb0159f0b32a9bd04c430cb90a657f`: MSVC x64 build, all
+10 native suites and pluginval strictness 5 passed. ZIP CRC, matching source,
+version, SHA-256 and PE x64 module were independently checked after publication.
+SHA-256: `90d6cadb3ced950734c6ce5ec3cab59e7d055c464869d93e1b1101f23d274378`.
+Close the DAW, replace the complete `Matale Tune.vst3` folder in
+`C:\Program Files\Common Files\VST3\` and reopen/rescan.
+
+![Actual Windows studio EQ cards](Native-Manual-Preview.png)
