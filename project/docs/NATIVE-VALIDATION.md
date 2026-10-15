@@ -165,4 +165,13 @@ actual GUI button callbacks for global Default and all five page Defaults.
 Existing module presets, full file round-trip, compatibility, style, Auto,
 realtime and layout checks remain enabled. Linux native build and all 10 CTest
 suites passed. Auto and EQ screenshots were inspected against the reference
-direction. Windows validation is pending for this revision.
+direction. Windows run https://github.com/shwesiads-ctrl/b-tune/actions/runs/38710110456
+passed for source `92d3fa3e15780dd12a27fcdbd97c6c1fd0783901`: MSVC x64 build,
+10/10 native suites and pluginval 1.0.4 strictness 5. The actual Windows Auto
+screenshot was inspected for the reference-inspired theme and Default button.
+Published archive CRC, source/version, PE x64 module and SHA-256 were checked.
+Archive size: 3,730,964 bytes. SHA-256:
+`78d87def5e5bdc641ca5d5b5dae5daf1f0980854a0e3452ec39f1ca180c13d80`.
+Binary commit: `fa28db448e7e0997fe3883dab16ff6b486a79f49`.
+Pluginval GUI tests and the separate Steinberg validator remain skipped as
+previously documented. Listening and DAW-specific recall remain host checks.

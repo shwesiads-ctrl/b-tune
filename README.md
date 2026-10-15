@@ -172,7 +172,7 @@ A stereo-linked output safety limiter uses 128 samples of lookahead and a −0.4
 
 ## Native DAW preview
 
-[Latest Windows VST3: 0.12.0 with per-module presets](https://github.com/shwesiads-ctrl/b-tune/raw/7e3b2dd70415fa9884875bacb80c01e77cf5d2ee/MataleTune-Windows-x64-VST3.zip)
+[Latest Windows VST3: 0.13.0 with Default and refreshed UI](https://github.com/shwesiads-ctrl/b-tune/raw/fa28db448e7e0997fe3883dab16ff6b486a79f49/MataleTune-Windows-x64-VST3.zip)
 
 VST3/AU share a compact four-panel JUCE editor: Vocal Analysis, Output, Auto
 Mode and Vocal Smooth. Native Auto measures dry stereo audio, estimates key
@@ -338,5 +338,21 @@ blue background, white rounded cards/pills, solid-blue active navigation and
 white circular AUTO control with a blue analysis arc. The vocal workflow,
 branding, module presets and Save/Load remain available.
 
-See [Default scope and usage](project/docs/NATIVE-PRESETS.md). Windows build
-validation is pending for this revision.
+See [Default scope and usage](project/docs/NATIVE-PRESETS.md). Windows native
+tests and pluginval strictness 5 passed.
+
+### Verified Windows 0.13.0 download
+
+[Download Windows x64 VST3 0.13.0](https://github.com/shwesiads-ctrl/b-tune/raw/fa28db448e7e0997fe3883dab16ff6b486a79f49/MataleTune-Windows-x64-VST3.zip)
+(3.73 MB) · [Windows build/test evidence](https://github.com/shwesiads-ctrl/b-tune/actions/runs/38710110456).
+
+Source `92d3fa3e15780dd12a27fcdbd97c6c1fd0783901`: MSVC x64 build, 10/10
+native tests and pluginval strictness 5 passed. Global/page Default callbacks,
+all default values, page isolation, file presets and native audio/UI checks
+are included. Archive CRC, source/version, SHA-256 and PE x64 module were
+independently checked. SHA-256:
+`78d87def5e5bdc641ca5d5b5dae5daf1f0980854a0e3452ec39f1ca180c13d80`.
+Close the DAW and replace the whole `Matale Tune.vst3` folder in
+`C:\Program Files\Common Files\VST3\`, then reopen/rescan.
+
+![Actual Windows reference-inspired native UI](Native-Compact-Preview.png)
