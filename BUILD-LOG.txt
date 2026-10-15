@@ -18,32 +18,32 @@
 -- Exporting juceaide
 -- Testing juceaide
 -- Finished setting up juceaide
--- Configuring done (123.7s)
+-- Configuring done (120.5s)
 -- Generating done (0.1s)
 -- Build files have been written to: D:/a/b-tune/b-tune/build-native
 
 
 ## build.log
 
-      D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2620,39):
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\utility(274,54): warning C4244:         [ [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\utility(274,54): warning C4244:             _Ty=int [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\utility(274,54): warning C4244:         ] [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\utility(274,54): warning C4244:         and [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\utility(274,54): warning C4244:         [ [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\utility(274,54): warning C4244:             _Ty2=float [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\utility(274,54): warning C4244:         ] [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
+  (compiling source file '../project/Source/PluginProcessor.cpp')
+      C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\utility(274,54):
       the template instantiation context (the oldest one first) is
-          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\contexts\juce_LowLevelGraphicsSoftwareRenderer.h(48,80):
-          see reference to class template instantiation 'juce::RenderingHelpers::StackBasedLowLevelGraphicsContext<juce::RenderingHelpers::SoftwareRendererSavedState>' being compiled
-          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2620,10):
-          while compiling class template member function 'void juce::RenderingHelpers::StackBasedLowLevelGraphicsContext<juce::RenderingHelpers::SoftwareRendererSavedState>::drawLine(const juce::Line<float> &)'
-  
-D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_Line.h(174,44): warning C4459: declaration of 'line' hides global declaration [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
-  (compiling source file '../project/Source/PluginEditor.cpp')
-      D:\a\b-tune\b-tune\project\Source\PluginEditor.cpp(9,20):
-      see declaration of '`anonymous-namespace'::line'
-      D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_Line.h(174,44):
-      the template instantiation context (the oldest one first) is
-          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\contexts\juce_LowLevelGraphicsContext.h(128,27):
-          see reference to class template instantiation 'juce::Line<float>' being compiled
-          D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\juce_Line.h(174,22):
-          while compiling class template member function 'juce::Point<float> juce::Line<float>::getIntersection(juce::Line<float>) noexcept const'
-              D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(343,5):
-              see the first reference to 'juce::Line<float>::getIntersection' in 'juce::RenderingHelpers::closestPointOnInfiniteLine'
+          D:\a\b-tune\b-tune\project\Source\ModulePresets.h(19,25):
+          see reference to function template instantiation 'std::pair<const char *,float>::pair<const char(&)[10],int,0>(_Other1,_Other2 &&) noexcept' being compiled
+          with
+          [
+              _Other1=const char (&)[10],
+              _Other2=int
+          ]
+              D:\a\b-tune\b-tune\project\Source\ModulePresets.h(18,55):
+              see the first reference to 'std::pair<const char *,float>::pair' in 'matale::modulePresets'
   
 D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\native\juce_RenderingHelpers.h(2280,32): warning C4459: declaration of 'line' hides global declaration [D:\a\b-tune\b-tune\build-native\MataleTune.vcxproj]
   (compiling source file '../project/Source/PluginEditor.cpp')
@@ -102,8 +102,8 @@ D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\ju
   
   juce_gui_basics.cpp
   juce_graphics.cpp
-  MataleTune_vst3_helper.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleTune_vst3_helper.exe
   juce_graphics_Harfbuzz.cpp
+  MataleTune_vst3_helper.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleTune_vst3_helper.exe
   juce_events.cpp
   juce_core.cpp
   juce_core_CompilationTime.cpp
@@ -130,8 +130,8 @@ D:\a\b-tune\b-tune\build-native\_deps\juce-src\modules\juce_graphics\geometry\ju
   creating D:/a/b-tune/b-tune/build-native/MataleTune_artefacts/Release/VST3/Matale Tune.vst3
   Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
   Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
-  DSPTests.cpp
   NativeProcessorTests.cpp
+  DSPTests.cpp
   Building Custom Rule D:/a/b-tune/b-tune/project/CMakeLists.txt
   NativeVocalTests.cpp
   MataleDSPTests.vcxproj -> D:\a\b-tune\b-tune\build-native\Release\MataleDSPTests.exe
@@ -151,17 +151,17 @@ D:\a\b-tune\b-tune\project\Source\VocalDSP.h(168,62): warning C4244: '=': conver
 Internal ctest changing into directory: D:/a/b-tune/b-tune/build-native
 Test project D:/a/b-tune/b-tune/build-native
       Start  1: native-vocal
- 1/10 Test  #1: native-vocal .....................   Passed    0.13 sec
+ 1/10 Test  #1: native-vocal .....................   Passed    0.12 sec
       Start  2: yin
  2/10 Test  #2: yin ..............................   Passed    0.03 sec
       Start  3: scale
- 3/10 Test  #3: scale ............................   Passed    0.00 sec
+ 3/10 Test  #3: scale ............................   Passed    0.01 sec
       Start  4: shift
- 4/10 Test  #4: shift ............................   Passed    0.03 sec
+ 4/10 Test  #4: shift ............................   Passed    0.04 sec
       Start  5: dynamics
- 5/10 Test  #5: dynamics .........................   Passed    0.04 sec
+ 5/10 Test  #5: dynamics .........................   Passed    0.05 sec
       Start  6: effects
- 6/10 Test  #6: effects ..........................   Passed    0.07 sec
+ 6/10 Test  #6: effects ..........................   Passed    0.11 sec
       Start  7: auto
  7/10 Test  #7: auto .............................   Passed    0.01 sec
       Start  8: stress
@@ -169,17 +169,17 @@ Test project D:/a/b-tune/b-tune/build-native
       Start  9: realtime
  9/10 Test  #9: realtime .........................   Passed    0.07 sec
       Start 10: native-processor
-10/10 Test #10: native-processor .................   Passed    1.46 sec
+10/10 Test #10: native-processor .................   Passed    1.48 sec
 
 100% tests passed, 0 tests failed out of 10
 
-Total Test time (real) =   1.97 sec
+Total Test time (real) =   2.03 sec
 
 
 ## pluginval.log
 
 Started validating: D:\a\b-tune\b-tune\build-native\MataleTune_artefacts\Release\VST3\Matale Tune.vst3
-Random seed: 0x2b0c429
+Random seed: 0x23331bd
 Validation started
 Strictness level: 5
 -----------------------------------------------------------------
@@ -187,7 +187,7 @@ Starting tests in: pluginval / Scan for plugins located in: D:\a\b-tune\b-tune\b
 Num plugins found: 1
 
 Testing plugin: VST3-Matale Tune-10cbe618-fcf59f7a
-Matale Audio: Matale Tune v0.11.0
+Matale Audio: Matale Tune v0.12.0
 Completed tests in pluginval / Scan for plugins located in: D:\a\b-tune\b-tune\build-native\MataleTune_artefacts\Release\VST3\Matale Tune.vst3
 -----------------------------------------------------------------
 Starting tests in: pluginval / Open plugin (cold)...
