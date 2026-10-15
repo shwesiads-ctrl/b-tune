@@ -104,3 +104,10 @@ Gain and Q controls. Card boundaries, panel background contrast and band accent
 colours are strengthened. Pitch / Key offers six Natural-mode response styles;
 see NATIVE-PRESETS.md for their real response changes and Hard Tune behaviour.
 Legacy 0.10 preset files migrate the new style field to Neutral.
+
+## Per-module presets (0.12.0)
+
+EQ, Compressor, Space and Vocal Cleanup each have five ready-made choices in
+the Manual page header. Selecting one changes only that module. Manually
+modified settings display Custom; Save/Load retains the combined settings.
+See NATIVE-PRESETS.md for the recipes and test each dropdown during playback.

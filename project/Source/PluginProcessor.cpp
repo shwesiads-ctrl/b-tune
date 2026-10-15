@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "ModulePresets.h"
 MataleTuneAudioProcessor::MataleTuneAudioProcessor()
 : AudioProcessor(BusesProperties().withInput("Input",juce::AudioChannelSet::stereo(),true)
 .withOutput("Output",juce::AudioChannelSet::stereo(),true)),
@@ -59,6 +60,23 @@ void MataleTuneAudioProcessor::setStateInformation(const void* data,int size){
     }
 }
 
+juce::StringArray MataleTuneAudioProcessor::modulePresetNames(int page)const{
+    juce::StringArray names;for(const auto& preset:matale::modulePresets(page))names.add(preset.name);return names;
+}
+int MataleTuneAudioProcessor::modulePresetIndex(int page)const{
+    const auto& recipes=matale::modulePresets(page);
+    for(size_t i=0;i<recipes.size();++i){bool match=true;
+        for(const auto& value:recipes[i].settings){auto* raw=parameters.getRawParameterValue(value.first);if(!raw||std::abs(raw->load()-value.second)>.001f){match=false;break;}}
+        if(match)return int(i);
+    }
+    return -1;
+}
+bool MataleTuneAudioProcessor::applyModulePreset(int page,int index){
+    const auto& recipes=matale::modulePresets(page);
+    if(index<0||index>=int(recipes.size())||requestAuto.load()||autoState.load()==1||autoState.load()==2)return false;
+    for(const auto& value:recipes[size_t(index)].settings){auto* p=parameters.getParameter(value.first);p->beginChangeGesture();p->setValueNotifyingHost(p->convertTo0to1(value.second));p->endChangeGesture();}
+    lastAutoStatus.store(0);return true;
+}
 bool MataleTuneAudioProcessor::applyFactoryPreset(int profile){
     if(profile<0||profile>4||requestAuto.load()||autoState.load()==1||autoState.load()==2)return false;
     matale::NativeProposal preset;

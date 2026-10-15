@@ -26,6 +26,8 @@ void manualCheck(MataleTuneAudioProcessor& p,juce::AudioProcessorEditor* editor)
             if(auto* choice=dynamic_cast<juce::ComboBox*>(child)){choice->setSelectedId(2,juce::sendNotificationSync);if(value(p,id.toRawUTF8())!=1)std::cerr<<"Selector "<<id<<" value="<<value(p,id.toRawUTF8())<<" selected="<<choice->getSelectedId()<<"\n";check(value(p,id.toRawUTF8())==1,"Manual selector does not update processor");++edited;}
             if(auto* toggle=dynamic_cast<juce::ToggleButton*>(child)){toggle->setToggleState(false,juce::sendNotificationSync);check(value(p,id.toRawUTF8())==0,"Manual toggle does not update processor");++edited;}
         }
+        if(page>1){juce::ComboBox* module=nullptr;for(auto* child:panel->getChildren())if(child->getComponentID()=="module-preset")module=dynamic_cast<juce::ComboBox*>(child);
+            check(module&&module->isVisible(),"Module preset selector missing");module->setSelectedId(2,juce::sendNotificationSync);check(p.modulePresetIndex(page-1)==0,"Module preset UI is not connected");}
         if(auto path=juce::SystemStats::getEnvironmentVariable("MATALE_NATIVE_SCREENSHOT",{});path.isNotEmpty()){
             editor->setSize(1200,720);auto file=juce::File(path).getSiblingFile("Native-Page-"+juce::String(page)+".png");file.deleteFile();juce::FileOutputStream out(file);
             check(out.openedOk()&&juce::PNGImageFormat().writeImageToStream(editor->createComponentSnapshot(editor->getLocalBounds()),out),"Cannot capture manual page");
@@ -39,6 +41,32 @@ void manualCheck(MataleTuneAudioProcessor& p,juce::AudioProcessorEditor* editor)
     }
     manual->onClick();check(!panel->isVisible(),"Manual did not return to Auto");editor->setSize(1200,720);layoutCheck(*editor);p.setStateInformation(before.getData(),int(before.getSize()));
 }
+void moduleCheck(MataleTuneAudioProcessor& p){
+    juce::MemoryBlock original;p.getStateInformation(original);
+    for(int page=1;page<=4;++page){check(p.modulePresetNames(page).size()==5,"Module recipes missing");
+        for(int recipe=0;recipe<5;++recipe){
+            std::vector<std::pair<juce::String,float>> before;
+            for(const auto& d:matale::parameterList)before.emplace_back(d.id,value(p,d.id));
+            for(const auto& d:matale::nativeParameters)before.emplace_back(d.id,value(p,d.id));
+            check(p.applyModulePreset(page,recipe)&&p.modulePresetIndex(page)==recipe,"Module preset did not apply or match");
+            for(auto& entry:before){auto id=entry.first;bool allowed=false;
+                if(page==2)allowed=id.startsWith("eq");
+                if(page==1)allowed=id=="threshold"||id=="ratio"||id=="attack"||id=="release"||id=="makeup"||id=="optoMode"||id=="optoMix"||id=="sidechainHz"||id=="limitMode";
+                if(page==3)allowed=id=="delayMix"||id=="delayBeats"||id=="feedback"||id=="reverbMix"||id=="room";
+                if(page==4)allowed=id=="vocalSmooth"||id=="harshControl"||id=="vocalWarmth"||id=="vocalPresence"||id=="deessAmount"||id=="deessHz"||id=="deessThreshold"||id=="denoiseAmount"||id=="noiseThreshold";
+                if(!allowed)check(value(p,id.toRawUTF8())==entry.second,"Module preset modified another module or global setting");
+            }
+            for(auto* parameter:p.getParameters())check(std::isfinite(parameter->getValue())&&parameter->getValue()>=0&&parameter->getValue()<=1,"Module value outside range");
+        }
+    }
+    check(p.applyModulePreset(2,1)&&value(p,"eq2g")<0,"Clean EQ recipe ineffective");set(p,"eq2g",-2.1f);check(p.modulePresetIndex(2)==-1,"Manual edits must display Custom");
+    check(p.applyModulePreset(1,2)&&value(p,"optoMode")==0&&value(p,"attack")==25,"Punch recipe ineffective");
+    check(p.applyModulePreset(3,0)&&value(p,"delayMix")==0&&value(p,"reverbMix")==0,"Dry recipe ineffective");
+    check(p.applyModulePreset(4,0)&&value(p,"vocalSmooth")==0&&value(p,"deessAmount")==0&&value(p,"denoiseAmount")==0,"Cleanup Off ineffective");
+    p.requestAuto.store(true);check(!p.applyModulePreset(2,1),"Module preset replaced pending Auto");p.requestAuto.store(false);
+    check(!p.applyModulePreset(0,0)&&!p.applyModulePreset(2,99),"Invalid module choice accepted");
+    p.setStateInformation(original.getData(),int(original.getSize()));
+}
 void presetCheck(MataleTuneAudioProcessor& p){
     juce::MemoryBlock original;p.getStateInformation(original);
     auto dir=juce::File::getSpecialLocation(juce::File::tempDirectory).getNonexistentChildFile("MatalePresetTests",{},false);
@@ -46,6 +74,7 @@ void presetCheck(MataleTuneAudioProcessor& p){
     struct Cleanup{juce::File dir;~Cleanup(){dir.deleteRecursively();}} cleanup{dir};
     auto file=dir.getChildFile("Vocal.matalepreset");juce::String error;
     for(int profile=0;profile<5;++profile){check(p.applyFactoryPreset(profile),"Factory preset failed");check(value(p,"autoProfile")==profile,"Factory character not saved");check(value(p,"style")==float(profile==4),"Factory style is wrong");}
+    check(p.applyModulePreset(2,2)&&p.applyModulePreset(1,2)&&p.applyModulePreset(3,2)&&p.applyModulePreset(4,2),"Cannot prepare combined module preset");
     set(p,"key",9);set(p,"scale",2);set(p,"output",-4.5f);set(p,"denoiseAmount",37);set(p,"includeDelay",0);set(p,"pitchResponse",5);
     std::vector<float> expected;for(auto* param:p.getParameters())expected.push_back(param->getValue());
     check(p.savePreset(file,error)&&file.existsAsFile(),"Preset save failed");check(p.applyFactoryPreset(0),"Cannot change before reload");
@@ -76,7 +105,7 @@ int main(){try{juce::ScopedJuceInitialiser_GUI init;MataleTuneAudioProcessor p;p
     juce::Timer::callAfterDelay(250,[]{juce::MessageManager::getInstance()->stopDispatchLoop();});juce::MessageManager::getInstance()->runDispatchLoop();if(failure)std::rethrow_exception(failure);check(closedVerified&&editor!=nullptr,"Auto must apply on message thread with editor closed");check(value(p,"key")==0&&value(p,"scale")==1,"Native Auto did not find C Major");check(value(p,"correction")==100&&value(p,"style")==0,"Natural pitch Auto not applied");check(value(p,"vocalSmooth")>0&&value(p,"deessAmount")>0,"Native vocal Auto missing");
     set(p,"vocalWarmth",27);set(p,"vocalPresence",15);set(p,"includeDelay",0);juce::MemoryBlock state;p.getStateInformation(state);MataleTuneAudioProcessor restored;restored.setStateInformation(state.getData(),int(state.getSize()));check(value(restored,"vocalWarmth")==27&&value(restored,"vocalPresence")==15&&value(restored,"includeDelay")==0,"Native state failed");
     auto legacy=p.parameters.copyState();for(int i=legacy.getNumChildren()-1;i>=0;--i){auto child=legacy.getChild(i);bool old=false;for(const auto& d:matale::parameterList)old|=child["id"].toString()==d.id;if(!old)legacy.removeChild(i,nullptr);}juce::MemoryBlock legacyData;if(auto xml=legacy.createXml())juce::AudioProcessor::copyXmlToBinary(*xml,legacyData);restored.setStateInformation(legacyData.getData(),int(legacyData.getSize()));check(value(restored,"vocalWarmth")==0&&value(restored,"outputSafety")==1,"Legacy state migration failed");
-    presetCheck(p);
+    moduleCheck(p);presetCheck(p);
     for(auto size:{juce::Point<int>(980,620),juce::Point<int>(1200,720),juce::Point<int>(1800,1000)}){editor->setSize(size.x,size.y);layoutCheck(*editor);}editor->setSize(1200,720);int knobs=0;for(auto* child:editor->getChildren())if(dynamic_cast<juce::Slider*>(child))++knobs;check(knobs==3,"Compact plugin must expose only Smooth/Warmth/Presence knobs");
     if(auto path=juce::SystemStats::getEnvironmentVariable("MATALE_NATIVE_SCREENSHOT",{});path.isNotEmpty()){juce::File file(path);file.deleteFile();juce::FileOutputStream out(file);check(out.openedOk(),"Cannot save UI preview");check(juce::PNGImageFormat().writeImageToStream(editor->createComponentSnapshot(editor->getLocalBounds()),out),"Cannot encode UI preview");}
     auto hostile=p.parameters.copyState();hostile.getChildWithProperty("id","vocalWarmth").setProperty("value",1.e20,nullptr);juce::MemoryBlock hostileData;if(auto xml=hostile.createXml())juce::AudioProcessor::copyXmlToBinary(*xml,hostileData);restored.setStateInformation(hostileData.getData(),int(hostileData.getSize()));check(value(restored,"vocalWarmth")==100,"State range validation failed");

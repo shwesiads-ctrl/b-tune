@@ -73,3 +73,34 @@ pitch Style shapes its Natural-mode pitch response. Selecting a factory
 character resets Style to Neutral; subsequent Auto passes retain your chosen
 Style. Existing 0.10.0 preset files load with Neutral as the new-field default.
 The original style parameter IDs and two mode values remain unchanged.
+
+## Module presets (0.12.0)
+
+Each Manual page except Pitch has a preset selector in its top-right corner.
+
+| Module | Ready-made choices |
+| --- | --- |
+| EQ | Flat, Clean, Warm, Presence, Air |
+| Compressor | Gentle Opto, Vocal Level, Punch, Firm Limit, Parallel |
+| Space | Dry, Small Room, Vocal Hall, Slapback, Quarter Delay |
+| Vocal Cleanup | Off, Gentle, Clean Vocal, Strong Cleanup, Warm Smooth |
+
+A choice applies immediately to that module only, using the existing host
+parameters and notifications. EQ sets its five frequency/gain/Q bands; compressor
+sets its dynamics and opto controls; Space sets delay/reverb but retains Output
+gain, tempo and safety; Cleanup sets smoothing, tonal, de-esser and noise-gate
+controls. The musical target, pitch response, other modules and Auto inclusion
+switches are retained. Auto must finish before applying a module preset. A later
+Auto pass can replace included modules; untick that Auto group to retain its
+manual/module-preset settings.
+
+The displayed name is derived from the actual parameter values. Editing a knob
+or applying Auto displays **Custom** when the settings no longer match a named
+recipe. Save/Load and DAW state retain the combined parameter values; matching
+module names return automatically on reload. No additional state parameters or
+preset-format changes were needed, so older presets remain supported.
+
+Opto presets use the existing program-dependent timing; Punch uses the standard
+compressor with adjustable attack/release/ratio. Slapback uses a quarter-beat
+delay (125 ms at 120 BPM); Quarter Delay uses one beat. Denoise remains a
+quiet-noise expander rather than learned broadband noise removal.

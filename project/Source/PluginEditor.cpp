@@ -136,10 +136,17 @@ MataleTuneAudioProcessorEditor::MataleTuneAudioProcessorEditor(MataleTuneAudioPr
     for(int i=0;i<7;++i){addAndMakeVisible(includes[size_t(i)]);includes[size_t(i)].setButtonText(includeNames[i]);buttons.push_back(std::make_unique<BA>(p.parameters,matale::nativeParameters[matale::IncludeSmooth+i].id,includes[size_t(i)]));}
     const char* ids[]={"vocalSmooth","vocalWarmth","vocalPresence"};const char* labels[]={"Smooth amount","Vocal warmth","Presence"};
     for(int i=0;i<3;++i){auto& knob=knobs[size_t(i)];addAndMakeVisible(knob);addAndMakeVisible(knobLabels[size_t(i)]);knobLabels[size_t(i)].setText(labels[i],juce::dontSendNotification);knobLabels[size_t(i)].setFont(juce::FontOptions(11.f));knobLabels[size_t(i)].setJustificationType(juce::Justification::centred);knob.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);knob.setTextBoxStyle(juce::Slider::TextBoxBelow,false,72,22);knob.setTextValueSuffix("%");knob.setTitle(labels[i]);knob.setDoubleClickReturnValue(true,matale::nativeParameters[i==0?matale::Smooth:i==1?matale::Warmth:matale::Presence].initial);sliders.push_back(std::make_unique<SA>(p.parameters,ids[i],knob));}
-    peakReset.onClick=[this]{processor.requestPeakReset.store(true);};status.setFont(juce::FontOptions(12.f));status.setColour(juce::Label::textColourId,muted);status.setText("Matale Tune 0.11.0 DAW preview | Play a vocal and press AUTO.",juce::dontSendNotification);
+    peakReset.onClick=[this]{processor.requestPeakReset.store(true);};status.setFont(juce::FontOptions(12.f));status.setColour(juce::Label::textColourId,muted);status.setText("Matale Tune 0.12.0 DAW preview | Play a vocal and press AUTO.",juce::dontSendNotification);
     addAndMakeVisible(manualButton);manualButton.setComponentID("manual");
     manualButton.onClick=[this]{showManual(!manualOpen);};
     addChildComponent(manualPanel);manualPanel.addAndMakeVisible(manualPage);
+    manualPanel.addAndMakeVisible(modulePreset);modulePreset.setComponentID("module-preset");
+    modulePreset.onChange=[this]{int index=modulePreset.getSelectedId()-2;if(index<0)return;
+        noticeProfile=-1;
+        const char* names[]={"Pitch","Compressor","EQ","Space","Vocal cleanup"};int page=manualPage.getSelectedId()-1;
+        presetNotice=processor.applyModulePreset(page,index)?juce::String(names[juce::jlimit(0,4,page)])+": "+modulePreset.getText()+" applied.":"Wait for Auto analysis to finish before changing module preset.";
+        noticeUntil=juce::Time::getMillisecondCounterHiRes()+5000;
+    };
     manualPage.setComponentID("manual-page");
     manualPage.addItemList({"Pitch / Key", "Compressor", "EQ", "Delay / Reverb / Output", "Vocal / Denoise"},1);
     manualPage.setSelectedId(1);manualPage.onChange=[this]{layoutManual();repaint();};
@@ -252,6 +259,10 @@ void MataleTuneAudioProcessorEditor::choosePreset(bool saving){
 void MataleTuneAudioProcessorEditor::layoutManual(){
     const int page=manualPage.getSelectedId()-1,startX=184,width=manualPanel.getWidth()-204,height=manualPanel.getHeight();
     manualModules.clear();manualPage.setBounds(0,0,1,1);manualPage.setVisible(false);
+    modulePreset.setBounds(manualPanel.getWidth()-252,12,232,32);modulePreset.setVisible(page>0);
+    modulePreset.clear(juce::dontSendNotification);modulePreset.addItem("Custom",1);modulePreset.setItemEnabled(1,false);
+    auto moduleNames=processor.modulePresetNames(page);for(int i=0;i<moduleNames.size();++i)modulePreset.addItem(moduleNames[i],i+2);
+    modulePreset.setSelectedId(processor.modulePresetIndex(page)+2,juce::dontSendNotification);
     for(int i=0;i<5;++i){pageTabs[size_t(i)].setBounds(16,76+i*46,150,38);pageTabs[size_t(i)].setToggleState(page==i,juce::dontSendNotification);}
     if(page==0){manualModules.push_back({startX,64,width,118});manualModules.push_back({startX,198,width,juce::jmin(240,height-216)});}
     else if(page==2){for(int b=0;b<5;++b)manualModules.push_back({startX+b*(width/5),174,width/5-8,height-192});}
@@ -318,7 +329,7 @@ void MataleTuneAudioProcessorEditor::paintManual(juce::Graphics& g){
     if(page>=3){const char* space[]={"DELAY","REVERB","OUTPUT"};const char* cleanup[]={"TONE / SMOOTH","DE-ESSER","DENOISE"};for(int i=0;i<3;++i)text(g,page==3?space[i]:cleanup[i],manualModules[size_t(i)].reduced(12).withHeight(24),11,blue,true);}
 }
 void MataleTuneAudioProcessorEditor::timerCallback(){int state=processor.autoState.load(std::memory_order_acquire),last=processor.lastAutoStatus.load();autoButton.setEnabled(state!=1&&state!=2);autoButton.setButtonText(state==1?"LISTENING":"AUTO");
-    juce::String message="Matale Tune 0.11.0 DAW preview | Play a vocal and press AUTO.";
+    juce::String message="Matale Tune 0.12.0 DAW preview | Play a vocal and press AUTO.";
     if(state==1)message="Listening: "+juce::String(int(processor.progress.load()*100))+"% | Keep the DAW playing a voiced phrase.";else if(last==3)message="No stable vocal found. Play a voiced phrase and press AUTO again.";else if(last==2)message="Auto applied | Key uncertain: retry on a phrase with several different notes. Chromatic pitch retained.";else if(last==1){int root=processor.detectedRoot.load();const char* names[]={"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};message="Auto applied | EQ, dynamics, smoothing and included effects ready.";if(root>=0)message+=" Key: "+juce::String(names[root])+ (processor.detectedScale.load()==1?" Major":" Minor");}
     const bool opto=processor.parameters.getRawParameterValue("optoMode")->load()>.5f;
     for(auto& c:manualControls)if(c.knob){auto id=c.knob->getComponentID();
@@ -331,6 +342,7 @@ void MataleTuneAudioProcessorEditor::timerCallback(){int state=processor.autoSta
     const bool natural=processor.parameters.getRawParameterValue("style")->load()<.5f;
     for(auto& c:manualControls)if(c.choice&&c.choice->getComponentID()=="pitchResponse"){c.choice->setEnabled(natural);c.label->setEnabled(natural);}
     factoryPreset.setSelectedId(int(processor.parameters.getRawParameterValue("autoProfile")->load())+1,juce::dontSendNotification);
+    if(manualOpen&&manualPage.getSelectedId()>1)modulePreset.setSelectedId(processor.modulePresetIndex(manualPage.getSelectedId()-1)+2,juce::dontSendNotification);
     if(noticeProfile>=0&&noticeProfile!=int(processor.parameters.getRawParameterValue("autoProfile")->load()))noticeUntil=0;
     if(juce::Time::getMillisecondCounterHiRes()<noticeUntil)message=presetNotice;
     status.setText(message,juce::dontSendNotification);
@@ -349,7 +361,7 @@ void MataleTuneAudioProcessorEditor::paint(juce::Graphics& g){
     text(g,"Matale Tune",{82,13,290,34},28,ink,true);
     text(g,"PRO VOCAL PROCESSOR",{83,46,280,18},10.5f,muted);
     text(g,"AUTO CHARACTER",{getWidth()-650,7,210,17},10,muted,true);
-    text(g,"v0.11.0",{getWidth()-262,33,68,20},10,muted,false,juce::Justification::centredRight);
+    text(g,"v0.12.0",{getWidth()-262,33,68,20},10,muted,false,juce::Justification::centredRight);
     g.setColour(line);g.drawHorizontalLine(getHeight()-35,20.f,float(getWidth()-20));
     if(manualOpen){paintManual(g);return;}
     for(auto r:{analysisBounds,outputBounds,autoBounds,smoothBounds})card(g,r);

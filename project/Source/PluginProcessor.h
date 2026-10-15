@@ -33,6 +33,9 @@ public:
     std::atomic<bool> requestAuto{false},requestPeakReset{false};
     // 0 idle, 1 listening, 2 mailbox ready, 3 insufficient voice.
     std::atomic<int> autoState{0},lastAutoStatus{0},detectedRoot{-1},detectedScale{0};
+    juce::StringArray modulePresetNames(int page) const;
+    int modulePresetIndex(int page) const;
+    bool applyModulePreset(int page,int index);
     bool applyFactoryPreset(int profile);
     bool savePreset(const juce::File&,juce::String& error);
     bool loadPreset(const juce::File&,juce::String& error);

@@ -303,3 +303,13 @@ Close the DAW, replace the complete `Matale Tune.vst3` folder in
 `C:\Program Files\Common Files\VST3\` and reopen/rescan.
 
 ![Actual Windows studio EQ cards](Native-Manual-Preview.png)
+
+## Per-module choices (0.12.0)
+
+Manual EQ, Compressor, Space and Vocal Cleanup now each have five ready-made
+presets. Selecting a module preset changes only that module; the other vocal
+settings stay intact. Modified settings display **Custom** automatically, and
+full Save/Load presets retain your combined settings.
+
+See [module preset choices](project/docs/NATIVE-PRESETS.md). Windows validation
+is pending for this revision.

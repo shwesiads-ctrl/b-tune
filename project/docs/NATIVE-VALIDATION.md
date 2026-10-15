@@ -137,3 +137,12 @@ verified. Size: 3,717,858 bytes. SHA-256:
 Binary commit: `8c63a4a4c4542c89eeb95ebab0801766efb5517b`.
 Pluginval GUI tests and the separate Steinberg validator remain skipped as
 previously documented. Listening and DAW-specific recall remain host checks.
+
+## Module presets 0.12.0
+
+New actual-processor checks cover all 20 module recipes, matching detection,
+unchanged parameters outside the selected module, valid ranges, invalid-index
+and pending-Auto rejection, Custom detection after edits, GUI selection on all
+four pages and Save/Load of a combined set of module choices. Linux native
+build and all 10 CTest suites passed. EQ and Space screenshots were inspected
+for the new module selector. Windows validation is pending for this revision.
