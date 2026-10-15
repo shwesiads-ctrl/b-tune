@@ -18,7 +18,16 @@ private:
     MataleTuneAudioProcessor& processor;MataleLookAndFeel look;
     juce::Component manualPanel;
     juce::TextButton manualButton{"Manual controls"};
-    juce::ComboBox manualPage;
+    juce::ComboBox manualPage,factoryPreset;
+    juce::TextButton saveButton{"Save"},loadButton{"Load"};
+    std::array<juce::TextButton,5> pageTabs;
+    std::vector<juce::Rectangle<int>> manualModules;
+    std::unique_ptr<juce::FileChooser> presetChooser;
+    juce::String presetNotice;
+    double noticeUntil=0;
+    int noticeProfile=-1;
+    void choosePreset(bool saving);
+    void paintManual(juce::Graphics&);
     struct ManualControl {
         int page;
         std::unique_ptr<juce::Slider> knob;

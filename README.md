@@ -251,3 +251,15 @@ Close the DAW, replace the whole `Matale Tune.vst3` folder in
 `C:\Program Files\Common Files\VST3\`, then reopen/rescan.
 
 ![Actual Windows 0.9.1 branded native editor](Native-Compact-Preview.png)
+
+## Native presets and grouped controls (0.10.0)
+
+The native header now includes **Natural / Clear / Warm / Bright / Hard Tune**
+starting presets and **Save / Load** for full `.matalepreset` files. Choosing a
+character changes the starting sound immediately; **AUTO** adapts that character
+to measured vocal input. Your manual Key/Scale and excluded Auto groups remain
+respected during analysis. Manual pages use navigation buttons, grouped modules,
+live input feedback and a real five-band EQ response curve.
+
+See [native preset usage and DAW checks](project/docs/NATIVE-PRESETS.md).
+Windows validation/download for this revision is pending.

@@ -1,6 +1,6 @@
 # Matale Tune product scope
 
-User-approved product direction. The native 0.9.0 processor/editor implements
+User-approved product direction. The native 0.10.0 processor/editor implements
 the compact profile for DAW preview builds. Windows build/validation status is
 published separately. The browser remains the full workbench; native Standalone
 with the full workbench is still planned.
@@ -37,7 +37,9 @@ Use rotary knobs, named selectors and switches. Back to Auto returns to the
 compact view without resetting edits. The manual view is not the full workbench.
 
 Do not include file/microphone selection, independent playback/seeking, Note
-Editor, offline rendering/export or browser preset file-management pages.
+Editor or offline rendering/export. Native factory characters and Save / Load
+`.matalepreset` files are now requested plugin features, available in Auto and
+Manual views.
 
 ## Standalone: full workbench
 

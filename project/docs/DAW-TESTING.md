@@ -86,3 +86,13 @@ header, refined rotary controls, spectrum shading and consistent switches. The
 persistent footer reads “Make by Myominaung” with a “Telegram @kominit” link
 to https://t.me/kominit in both Auto and Manual views. No DSP or parameter IDs
 changed for this visual update.
+
+## Presets and grouped Manual interface (0.10.0)
+
+The header now has Natural, Clear, Warm, Bright and Hard Tune starting presets
+and native Save / Load buttons. Selecting a character applies starting settings;
+AUTO then adapts that character to the vocal, respecting the included groups.
+Save and load full parameter settings as `.matalepreset` files. See
+[NATIVE-PRESETS.md](NATIVE-PRESETS.md) for retained settings and host checks.
+Manual uses a left navigation rail, grouped modules, live input feedback and
+a five-band EQ response plot computed from the actual filter settings.

@@ -18,10 +18,11 @@ inline constexpr NativeParameter nativeParameters[]={
  {"includeSmooth","Auto Vocal Smooth",0,1,1,1,true},{"includeDynamics","Auto Dynamics",0,1,1,1,true},
  {"includeDeess","Auto De-Esser",0,1,1,1,true},{"includeEq","Auto EQ",0,1,1,1,true},
  {"includePitch","Auto Pitch",0,1,1,1,true},{"includeReverb","Auto Reverb",0,1,1,1,true},
- {"includeDelay","Auto Delay",0,1,1,1,true}
+ {"includeDelay","Auto Delay",0,1,1,1,true},
+ {"autoProfile","Auto character",0,4,1,0,false}
 };
 inline constexpr int nativeParameterCount=int(sizeof(nativeParameters)/sizeof(nativeParameters[0]));
-enum NativeIndex {Smooth,Harsh,Warmth,Presence,Deess,DeessHz,DeessThreshold,Denoise,NoiseThreshold,Opto,OptoMix,SidechainHz,Limit,Safety,AutoKey,IncludeSmooth,IncludeDynamics,IncludeDeess,IncludeEq,IncludePitch,IncludeReverb,IncludeDelay};
+enum NativeIndex {Smooth,Harsh,Warmth,Presence,Deess,DeessHz,DeessThreshold,Denoise,NoiseThreshold,Opto,OptoMix,SidechainHz,Limit,Safety,AutoKey,IncludeSmooth,IncludeDynamics,IncludeDeess,IncludeEq,IncludePitch,IncludeReverb,IncludeDelay,AutoProfile};
 using NativeValues=std::array<float,nativeParameterCount>;
 inline NativeValues nativeDefaults(){NativeValues a{};for(int i=0;i<nativeParameterCount;++i)a[size_t(i)]=nativeParameters[i].initial;return a;}
 struct KeyEstimate {int root=0,scale=0;float score=0,margin=0;bool confident=false;};
@@ -35,6 +36,16 @@ inline KeyEstimate estimateKey(const std::array<double,12>& histogram) {
     result.score=float(best);result.margin=float(best-second);result.confident=best>=.5&&best-second>=.035;return result;
 }
 struct NativeProposal {std::array<float,parameterCount> core{};NativeValues extra{};std::array<bool,parameterCount> coreChanged{};std::array<bool,nativeParameterCount> extraChanged{};KeyEstimate key;bool valid=false;float rmsDb=-180,crest=0;};
+// Character adjustments are shared by factory presets and measured Auto proposals.
+// Changed masks preserve excluded groups, including a manually selected key/scale.
+inline void applyCharacter(NativeProposal& p,int profile){
+    auto core=[&](int i,float delta){if(p.coreChanged[size_t(i)])p.core[size_t(i)]=std::clamp(p.core[size_t(i)]+delta,parameterList[i].lo,parameterList[i].hi);};
+    auto extra=[&](int i,float delta){if(p.extraChanged[size_t(i)])p.extra[size_t(i)]=std::clamp(p.extra[size_t(i)]+delta,nativeParameters[i].lo,nativeParameters[i].hi);};
+    if(profile==1){core(17,-1.5f);core(23,1);extra(Smooth,10);extra(Presence,10);extra(Deess,8);}
+    if(profile==2){core(14,1);core(17,1);core(26,-1);extra(Warmth,20);extra(Presence,-5);extra(Smooth,15);core(4,10);}
+    if(profile==3){core(23,1.5f);core(26,2);extra(Presence,18);extra(Deess,12);core(31,.015f);}
+    if(profile==4){if(p.coreChanged[2])p.core[2]=1;if(p.coreChanged[4])p.core[4]=5;if(p.coreChanged[5])p.core[5]=0;if(p.coreChanged[7])p.core[7]=100;core(28,.04f);core(31,.02f);}
+}
 class NativeAuto {
     double rate=48000,sum=0;float peak=0;std::array<double,8> low{};std::array<double,5> bands{};std::array<double,4> coefficients{};
     std::array<double,12> chroma{};std::array<int,91> levelHistogram{};double frameEnergy=0;int frameCount=0;double voiced=0;
@@ -53,7 +64,7 @@ public:
       if(settings[IncludeDynamics]>.5f){float threshold=std::clamp(out.rmsDb-5,-36.f,-10.f),gr=std::max(0.f,out.rmsDb-threshold)*.75f;core(8,threshold);core(9,4);core(10,10);core(11,180);core(12,std::clamp(std::min(-20-out.rmsDb+gr,-2-db(peak)+gr),0.f,9.f));extra(Opto,1);extra(OptoMix,100);extra(SidechainHz,80);extra(Limit,0);extra(Safety,1);}
       if(settings[IncludeEq]>.5f){constexpr float freq[]={90,300,1200,3500,10000},q[]={.7f,.9f,1,.8f,.7f};float gains[]={ratios[0]>.35f?-3.f:0.f,std::clamp((ratios[1]-.22f)*-10,-4.f,0.f),0,ratios[3]<.08f?2.f:ratios[3]>.4f?-2.f:0.f,ratios[4]<.04f?1.f:0.f};for(int i=0;i<5;++i){core(13+i*3,freq[i]);core(14+i*3,gains[i]);core(15+i*3,q[i]);}}
       if(settings[IncludeSmooth]>.5f){extra(Smooth,ratios[3]+ratios[4]>.3f?40.f:20.f);extra(Harsh,1);extra(Warmth,ratios[0]<.08f?8.f:0.f);extra(Presence,0);int totalFrames=0;for(auto h:levelHistogram)totalFrames+=h;int accumulated=0,floor=-90;for(int i=0;i<91;++i){accumulated+=levelHistogram[size_t(i)];if(accumulated>=std::max(1,totalFrames/10)){floor=i-90;break;}}bool quiet=floor<out.rmsDb-12&&floor>-78;extra(Denoise,quiet?30.f:0.f);extra(NoiseThreshold,std::clamp(float(floor+6),-60.f,-30.f));}
-      if(settings[IncludeDeess]>.5f){extra(Deess,std::clamp(std::round(ratios[4]*180),15.f,55.f));extra(DeessHz,6000);extra(DeessThreshold,std::clamp(out.rmsDb-8,-40.f,-18.f));}if(settings[IncludeReverb]>.5f)core(31,.04f);if(settings[IncludeDelay]>.5f)core(28,.02f);return out;
+      if(settings[IncludeDeess]>.5f){extra(Deess,std::clamp(std::round(ratios[4]*180),15.f,55.f));extra(DeessHz,6000);extra(DeessThreshold,std::clamp(out.rmsDb-8,-40.f,-18.f));}if(settings[IncludeReverb]>.5f)core(31,.04f);if(settings[IncludeDelay]>.5f)core(28,.02f);applyCharacter(out,int(settings[AutoProfile]));return out;
     }
 };
 class NativeVocal {

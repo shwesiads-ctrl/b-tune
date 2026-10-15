@@ -136,13 +136,26 @@ MataleTuneAudioProcessorEditor::MataleTuneAudioProcessorEditor(MataleTuneAudioPr
     for(int i=0;i<7;++i){addAndMakeVisible(includes[size_t(i)]);includes[size_t(i)].setButtonText(includeNames[i]);buttons.push_back(std::make_unique<BA>(p.parameters,matale::nativeParameters[matale::IncludeSmooth+i].id,includes[size_t(i)]));}
     const char* ids[]={"vocalSmooth","vocalWarmth","vocalPresence"};const char* labels[]={"Smooth amount","Vocal warmth","Presence"};
     for(int i=0;i<3;++i){auto& knob=knobs[size_t(i)];addAndMakeVisible(knob);addAndMakeVisible(knobLabels[size_t(i)]);knobLabels[size_t(i)].setText(labels[i],juce::dontSendNotification);knobLabels[size_t(i)].setFont(juce::FontOptions(11.f));knobLabels[size_t(i)].setJustificationType(juce::Justification::centred);knob.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);knob.setTextBoxStyle(juce::Slider::TextBoxBelow,false,72,22);knob.setTextValueSuffix("%");knob.setTitle(labels[i]);knob.setDoubleClickReturnValue(true,matale::nativeParameters[i==0?matale::Smooth:i==1?matale::Warmth:matale::Presence].initial);sliders.push_back(std::make_unique<SA>(p.parameters,ids[i],knob));}
-    peakReset.onClick=[this]{processor.requestPeakReset.store(true);};status.setFont(juce::FontOptions(12.f));status.setColour(juce::Label::textColourId,muted);status.setText("Matale Tune 0.9.1 DAW preview | Play a vocal and press AUTO.",juce::dontSendNotification);
+    peakReset.onClick=[this]{processor.requestPeakReset.store(true);};status.setFont(juce::FontOptions(12.f));status.setColour(juce::Label::textColourId,muted);status.setText("Matale Tune 0.10.0 DAW preview | Play a vocal and press AUTO.",juce::dontSendNotification);
     addAndMakeVisible(manualButton);manualButton.setComponentID("manual");
     manualButton.onClick=[this]{showManual(!manualOpen);};
     addChildComponent(manualPanel);manualPanel.addAndMakeVisible(manualPage);
     manualPage.setComponentID("manual-page");
     manualPage.addItemList({"Pitch / Key", "Compressor", "EQ", "Delay / Reverb / Output", "Vocal / Denoise"},1);
-    manualPage.setSelectedId(1);manualPage.onChange=[this]{layoutManual();};
+    manualPage.setSelectedId(1);manualPage.onChange=[this]{layoutManual();repaint();};
+    manualPage.setVisible(false);
+    const char* tabNames[]={"Pitch / Key","Compressor","EQ","Space / Output","Vocal cleanup"};
+    for(int i=0;i<5;++i){auto& tab=pageTabs[size_t(i)];manualPanel.addAndMakeVisible(tab);tab.setButtonText(tabNames[i]);tab.setComponentID("page-tab");tab.onClick=[this,i]{manualPage.setSelectedId(i+1,juce::sendNotificationSync);};}
+    addAndMakeVisible(factoryPreset);factoryPreset.setComponentID("factory-preset");
+    factoryPreset.addItemList({"Natural","Clear","Warm","Bright","Hard Tune"},1);
+    factoryPreset.setSelectedId(1);factoryPreset.onChange=[this]{
+        noticeProfile=-1;
+        if(!processor.applyFactoryPreset(factoryPreset.getSelectedId()-1)){presetNotice="Wait for Auto analysis to finish before changing character.";}
+        else {noticeProfile=factoryPreset.getSelectedId()-1;presetNotice=factoryPreset.getText()+" preset applied. Press AUTO to adapt it to your vocal.";}
+        noticeUntil=juce::Time::getMillisecondCounterHiRes()+6000;
+    };
+    addAndMakeVisible(saveButton);addAndMakeVisible(loadButton);
+    saveButton.onClick=[this]{choosePreset(true);};loadButton.onClick=[this]{choosePreset(false);};
     auto addControl=[this,&p](const char* id,const char* name,float initial,int page,bool boolean,juce::StringArray options={}){
         ManualControl control;control.page=page;
         control.label=std::make_unique<juce::Label>();control.label->setText(name,juce::dontSendNotification);
@@ -192,6 +205,8 @@ void MataleTuneAudioProcessorEditor::resized(){
     autoBounds={pad,y+top+gap,left,available-top-gap};
     smoothBounds={outputBounds.getX(),autoBounds.getY(),outputBounds.getWidth(),autoBounds.getHeight()};
     manualButton.setBounds(getWidth()-184,24,164,36);
+    factoryPreset.setBounds(getWidth()-650,28,210,32);
+    saveButton.setBounds(getWidth()-430,28,74,32);loadButton.setBounds(getWidth()-348,28,74,32);
     manualPanel.setBounds(pad,y,w,available);layoutManual();
     status.setBounds(pad+2,getHeight()-62,w-4,24);
     credit.setBounds(pad,getHeight()-30,240,22);telegram.setBounds(getWidth()-220,getHeight()-30,200,22);
@@ -210,31 +225,92 @@ void MataleTuneAudioProcessorEditor::resized(){
 }
 void MataleTuneAudioProcessorEditor::showManual(bool open){
     manualOpen=open;
-    for(auto* child:getChildren())if(child!=&manualPanel&&child!=&manualButton&&child!=&status&&child!=&credit&&child!=&telegram)child->setVisible(!open);
+    for(auto* child:getChildren())if(child!=&manualPanel&&child!=&manualButton&&child!=&status&&child!=&credit&&child!=&telegram&&child!=&factoryPreset&&child!=&saveButton&&child!=&loadButton)child->setVisible(!open);
     manualPanel.setVisible(open);manualButton.setButtonText(open?"Back to Auto":"Manual controls");
     layoutManual();repaint();
 }
+void MataleTuneAudioProcessorEditor::choosePreset(bool saving){
+    presetChooser=std::make_unique<juce::FileChooser>(saving?"Save Matale Tune preset":"Load Matale Tune preset",juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("My Vocal.matalepreset"),"*.matalepreset");
+    auto safe=juce::Component::SafePointer<MataleTuneAudioProcessorEditor>(this);
+    int flags=saving?(juce::FileBrowserComponent::saveMode|juce::FileBrowserComponent::canSelectFiles|juce::FileBrowserComponent::warnAboutOverwriting):(juce::FileBrowserComponent::openMode|juce::FileBrowserComponent::canSelectFiles);
+    presetChooser->launchAsync(flags,[safe,saving](const juce::FileChooser& chooser){
+        if(!safe)return;auto file=chooser.getResult();if(file==juce::File{})return;
+        if(saving){auto target=file.withFileExtension("matalepreset");
+            if(target!=file&&target.existsAsFile()){safe->presetNotice="That preset already exists. Choose its .matalepreset filename to replace it.";safe->noticeUntil=juce::Time::getMillisecondCounterHiRes()+7000;return;}
+            file=target;
+        }
+        juce::String error;bool ok=saving?safe->processor.savePreset(file,error):safe->processor.loadPreset(file,error);
+        safe->noticeProfile=-1;
+        safe->presetNotice=ok?(saving?"Saved: ":"Loaded: ")+file.getFileName():error;
+        safe->noticeUntil=juce::Time::getMillisecondCounterHiRes()+7000;
+    });
+}
 void MataleTuneAudioProcessorEditor::layoutManual(){
-    manualPage.setBounds(20,52,300,32);
-    int page=manualPage.getSelectedId()-1,count=0;
-    for(auto& c:manualControls)if(c.page==page)++count;
-    const int columns=page==2?5:4,rows=juce::jmax(1,(count+columns-1)/columns);
-    int cellW=(manualPanel.getWidth()-40)/columns,cellH=(manualPanel.getHeight()-116)/rows,index=0;
+    const int page=manualPage.getSelectedId()-1,startX=184,width=manualPanel.getWidth()-204,height=manualPanel.getHeight();
+    manualModules.clear();manualPage.setBounds(0,0,1,1);manualPage.setVisible(false);
+    for(int i=0;i<5;++i){pageTabs[size_t(i)].setBounds(16,76+i*46,150,38);pageTabs[size_t(i)].setToggleState(page==i,juce::dontSendNotification);}
+    if(page==0){manualModules.push_back({startX,64,width,118});manualModules.push_back({startX,198,width,juce::jmin(240,height-216)});}
+    else if(page==2){for(int b=0;b<5;++b)manualModules.push_back({startX+b*(width/5),174,width/5-8,height-192});}
+    else if(page==1){manualModules.push_back({startX,64,width,58});for(int r=0;r<2;++r)manualModules.push_back({startX,138+r*((height-154)/2),width,(height-154)/2-10});}
+    else {for(int i=0;i<3;++i)manualModules.push_back({startX+i*(width/3),64,width/3-10,height-82});}
+    int index=0;
     for(auto& c:manualControls){bool visible=c.page==page;c.label->setVisible(visible);
         if(c.knob)c.knob->setVisible(visible);
         if(c.choice)c.choice->setVisible(visible);
         if(c.toggle)c.toggle->setVisible(visible);
         if(!visible)continue;
-        int column=page==2?index/3:index%columns,row=page==2?index%3:index/columns;
-        int x=20+column*cellW,y=104+row*cellH;++index;
-        c.label->setBounds(x,y,cellW,24);
-        if(c.knob)c.knob->setBounds(x+8,y+26,cellW-16,juce::jmin(150,cellH-32));
-        if(c.choice)c.choice->setBounds(x+10,y+42,cellW-20,34);
-        if(c.toggle)c.toggle->setBounds(x+20,y+42,cellW-40,34);
+        juce::String id=c.knob?c.knob->getComponentID():c.choice?c.choice->getComponentID():c.toggle->getComponentID();
+        int x=startX,y=94,w=width,h=128;
+        if(page==0){if(c.choice){w=width/3;x+=index*w;y=94;h=72;}else {int k=index-3;w=width/4;x+=k*w;y=232;h=juce::jmin(156,height-250);}}
+        else if(page==1){if(c.toggle){int col=id=="optoMode"?0:1;w=width/2;x+=col*w;y=76;h=36;}
+            else{int k=0;const char* ids[]={"threshold","ratio","attack","release","makeup","optoMix","sidechainHz"};while(k<7&&id!=ids[k])++k;w=width/4;x+=(k%4)*w;h=juce::jmin(155,(height-170)/2);y=154+(k/4)*((height-154)/2);}}
+        else if(page==2){int k=index/3,row=index%3;w=width/5;x+=k*w;int rowH=(height-224)/3;y=206+row*rowH;h=rowH-4;}
+        else {int group=0,row=0;
+            if(page==3){if(id=="delayMix")row=0;else if(id=="delayBeats")row=1;else if(id=="feedback")row=2;else if(id=="reverbMix"){group=1;row=0;}else if(id=="room"){group=1;row=1;}else{group=2;row=id=="output"?0:id=="bpm"?1:2;}}
+            else {if(id=="vocalSmooth")row=0;else if(id=="vocalWarmth")row=1;else if(id=="vocalPresence")row=2;else if(id=="harshControl")row=3;else if(id=="deessAmount"){group=1;row=0;}else if(id=="deessHz"){group=1;row=1;}else if(id=="deessThreshold"){group=1;row=2;}else{group=2;row=id=="denoiseAmount"?0:1;}}
+            w=width/3;x+=group*w;int rowH=juce::jmin(126,(height-130)/3);y=106+row*rowH;h=c.toggle?34:rowH-4;
+        }
+        ++index;
+        if(c.toggle)y=juce::jmin(y,height-40);
+        if(c.toggle){c.label->setBounds(x+12,y,w/2,28);c.toggle->setBounds(x+w/2,y,w/2-14,28);}
+        else {c.label->setBounds(x+6,y,w-18,22);
+            if(c.choice)c.choice->setBounds(x+14,y+28,w-32,32);
+            if(c.knob)c.knob->setBounds(x+12,y+23,w-28,juce::jmax(30,h-26));}
     }
 }
+void MataleTuneAudioProcessorEditor::paintManual(juce::Graphics& g){
+    auto panel=manualPanel.getBounds();card(g,panel);juce::Graphics::ScopedSaveState save(g);g.setOrigin(panel.getPosition());
+    const int page=manualPage.getSelectedId()-1;const char* names[]={"Pitch / Key","Compressor","Equalizer","Space / Output","Vocal cleanup"};
+    text(g,names[juce::jlimit(0,4,page)],{184,14,400,30},22,ink,true);
+    text(g,"VOCAL TOOLS",{20,28,145,24},11,muted,true);
+    for(auto r:manualModules)card(g,r);
+    auto live=juce::Rectangle<int>(16,330,150,juce::jmin(146,panel.getHeight()-346));card(g,live);
+    text(g,"LIVE INPUT",{28,340,126,20},10,blue,true);
+    float hz=processor.displayedPitch.load();int midi=hz>0?juce::roundToInt(69+12*std::log2(hz/440.f)):-1;
+    text(g,noteName(midi),{28,361,126,32},23,ink,true);
+    meter(g,{28.f,402.f,126.f,6.f},processor.inputLevel.load());
+    text(g,"Out "+decibel(processor.outputLevel.load())+" dBFS",{28,416,126,18},11,muted);
+    const char* tips[]={"Choose a musical target, then shape the pitch response.","Opto: smooth program-dependent timing. Switch off for standard controls.","Five parametric bands / frequency, gain and Q.","Tempo-synced delay, room ambience and output safety.","Tone shaping, sibilance control and quiet-noise reduction."};
+    text(g,tips[juce::jlimit(0,4,page)],{184,44,panel.getWidth()-206,18},11,muted);
+    if(page==0){text(g,"MUSICAL TARGET",{198,72,260,20},10,blue,true);text(g,"PITCH RESPONSE",{198,205,260,20},10,blue,true);}
+    if(page==2){
+        auto plot=juce::Rectangle<int>(184,70,panel.getWidth()-204,86);
+        g.setColour(juce::Colour(0xffeaf4ff));g.fillRoundedRectangle(plot.toFloat(),10);
+        std::array<matale::Biquad,5> bands;double sr=processor.getSampleRate()>0?processor.getSampleRate():48000;
+        for(int b=0;b<5;++b){int i=13+b*3;bands[size_t(b)].peak(sr,processor.parameters.getRawParameterValue(matale::parameterList[i].id)->load(),processor.parameters.getRawParameterValue(matale::parameterList[i+2].id)->load(),processor.parameters.getRawParameterValue(matale::parameterList[i+1].id)->load());}
+        g.setColour(line);g.drawHorizontalLine(plot.getCentreY(),float(plot.getX()),float(plot.getRight()));juce::Path curve;
+        for(int i=0;i<240;++i){double hz=20*std::pow(1000.,i/239.),omega=2*matale::pi*std::min(hz,sr*.49)/sr,magnitude=1;
+            for(auto& b:bands){double nr=b.b0+b.b1*std::cos(omega)+b.b2*std::cos(2*omega),ni=-b.b1*std::sin(omega)-b.b2*std::sin(2*omega),dr=1+b.a1*std::cos(omega)+b.a2*std::cos(2*omega),di=-b.a1*std::sin(omega)-b.a2*std::sin(2*omega);magnitude*=std::sqrt((nr*nr+ni*ni)/std::max(1.e-16,dr*dr+di*di));}
+            float x=plot.getX()+i*plot.getWidth()/239.f,y=plot.getCentreY()-juce::jlimit(-18.f,18.f,float(20*std::log10(std::max(1.e-9,magnitude))))*plot.getHeight()/40.f;
+            if(i==0)curve.startNewSubPath(x,y);else curve.lineTo(x,y);
+        }
+        g.setColour(blue);g.strokePath(curve,juce::PathStrokeType(2));
+        for(int b=0;b<5;++b)text(g,"BAND "+juce::String(b+1),manualModules[size_t(b)].reduced(12).withHeight(20),11,blue,true);
+    }
+    if(page>=3){const char* space[]={"DELAY","REVERB","OUTPUT"};const char* cleanup[]={"TONE / SMOOTH","DE-ESSER","DENOISE"};for(int i=0;i<3;++i)text(g,page==3?space[i]:cleanup[i],manualModules[size_t(i)].reduced(12).withHeight(24),11,blue,true);}
+}
 void MataleTuneAudioProcessorEditor::timerCallback(){int state=processor.autoState.load(std::memory_order_acquire),last=processor.lastAutoStatus.load();autoButton.setEnabled(state!=1&&state!=2);autoButton.setButtonText(state==1?"LISTENING":"AUTO");
-    juce::String message="Matale Tune 0.9.1 DAW preview | Play a vocal and press AUTO.";
+    juce::String message="Matale Tune 0.10.0 DAW preview | Play a vocal and press AUTO.";
     if(state==1)message="Listening: "+juce::String(int(processor.progress.load()*100))+"% | Keep the DAW playing a voiced phrase.";else if(last==3)message="No stable vocal found. Play a voiced phrase and press AUTO again.";else if(last==2)message="Auto applied | Key uncertain: retry on a phrase with several different notes. Chromatic pitch retained.";else if(last==1){int root=processor.detectedRoot.load();const char* names[]={"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};message="Auto applied | EQ, dynamics, smoothing and included effects ready.";if(root>=0)message+=" Key: "+juce::String(names[root])+ (processor.detectedScale.load()==1?" Major":" Minor");}
     const bool opto=processor.parameters.getRawParameterValue("optoMode")->load()>.5f;
     for(auto& c:manualControls)if(c.knob){auto id=c.knob->getComponentID();
@@ -244,6 +320,9 @@ void MataleTuneAudioProcessorEditor::timerCallback(){int state=processor.autoSta
         }
     }
     if(manualOpen)message="Manual / Live changes are saved with your DAW project. Auto updates only the groups you include.";
+    factoryPreset.setSelectedId(int(processor.parameters.getRawParameterValue("autoProfile")->load())+1,juce::dontSendNotification);
+    if(noticeProfile>=0&&noticeProfile!=int(processor.parameters.getRawParameterValue("autoProfile")->load()))noticeUntil=0;
+    if(juce::Time::getMillisecondCounterHiRes()<noticeUntil)message=presetNotice;
     status.setText(message,juce::dontSendNotification);
     int write=processor.scopePosition.load(std::memory_order_acquire);fftData.fill(0);for(int i=0;i<2048;++i)fftData[size_t(i)]=processor.scope[size_t((write+i)%2048)].load(std::memory_order_relaxed)*(.5f-.5f*std::cos(2*matale::pi*i/2047.f));fft.performFrequencyOnlyForwardTransform(fftData.data());double rate=processor.getSampleRate()>0?processor.getSampleRate():48000;for(int i=0;i<int(spectrum.size());++i){float frequency=20*std::pow(1000.f,float(i)/float(spectrum.size()-1));int bin=juce::jlimit(1,1023,int(frequency/rate*2048));float level=matale::db(fftData[size_t(bin)]/512.f);spectrum[size_t(i)]=.65f*spectrum[size_t(i)]+.35f*juce::jlimit(0.f,1.f,(level+80)/80);}
     repaint();
@@ -259,14 +338,10 @@ void MataleTuneAudioProcessorEditor::paint(juce::Graphics& g){
     g.strokePath(mark,juce::PathStrokeType(6.5f,juce::PathStrokeType::curved,juce::PathStrokeType::rounded));
     text(g,"Matale Tune",{82,13,290,34},28,ink,true);
     text(g,"PRO VOCAL PROCESSOR",{83,46,280,18},10.5f,muted);
-    text(g,manualOpen?"MANUAL / LIVE CONTROL":"AUTO / VOCAL ENGINE",{getWidth()-425,25,220,20},11,muted,false,juce::Justification::centredRight);
-    text(g,"v0.9.1",{getWidth()-320,45,115,17},10,muted,false,juce::Justification::centredRight);
+    text(g,"AUTO CHARACTER",{getWidth()-650,7,210,17},10,muted,true);
+    text(g,"v0.10.0",{getWidth()-262,33,68,20},10,muted,false,juce::Justification::centredRight);
     g.setColour(line);g.drawHorizontalLine(getHeight()-35,20.f,float(getWidth()-20));
-    if(manualOpen){
-        auto r=manualPanel.getBounds();card(g,r);
-        text(g,"Manual controls",{r.getX()+20,r.getY()+12,280,32},21,ink,true);
-        text(g,"Live parameters / double-click to reset / type a value below each knob",{r.getX()+340,r.getY()+52,r.getWidth()-360,32},11,muted);return;
-    }
+    if(manualOpen){paintManual(g);return;}
     for(auto r:{analysisBounds,outputBounds,autoBounds,smoothBounds})card(g,r);
     auto a=analysisBounds;float hz=processor.displayedPitch.load(),confidence=processor.pitchConfidence.load();int midi=hz>0?juce::roundToInt(69+12*std::log2(hz/440.f)):-1;
     text(g,"Vocal Analysis",{a.getX()+20,a.getY()+16,220,26},19,ink,true);text(g,hz>0?"Live / voiced":"No voiced input",{a.getRight()-130,a.getY()+18,112,22},11,hz>0?green:muted,false,juce::Justification::centredRight);
@@ -278,6 +353,6 @@ void MataleTuneAudioProcessorEditor::paint(juce::Graphics& g){
     g.setColour(blue);g.strokePath(path,juce::PathStrokeType(1.6f));meter(g,{float(plot.getX()),float(a.getBottom()-32),float(juce::jmax(20,plot.getWidth()-80)),7},processor.inputLevel.load());text(g,decibel(processor.inputLevel.load())+" dBFS",{plot.getRight()-80,a.getBottom()-41,80,24},10,ink,false,juce::Justification::centredRight);
     auto o=outputBounds;text(g,"Output",{o.getX()+20,o.getY()+16,160,26},19,ink,true);text(g,decibel(processor.outputLevel.load())+" dBFS",{o.getX()+20,o.getY()+62,o.getWidth()-40,44},29,ink,true);meter(g,{float(o.getX()+20),float(o.getY()+121),float(o.getWidth()-40),11},processor.outputLevel.load());float lufs=processor.momentaryLufs.load();text(g,"Momentary LUFS",{o.getX()+20,o.getBottom()-73,130,20},10,muted);text(g,lufs>-179?juce::String(lufs,1):"--",{o.getX()+20,o.getBottom()-49,100,24},16,ink,true);text(g,"Sample peak",{o.getX()+150,o.getBottom()-73,110,20},10,muted);text(g,decibel(processor.samplePeak.load())+" dBFS",{o.getX()+150,o.getBottom()-27,110,20},12,ink);
     for(int c=0;c<2;++c){float level=c?processor.rightLevel.load():processor.leftLevel.load();int x=o.getRight()-42+c*18,y=o.getY()+151,h=juce::jmax(25,o.getHeight()-175);g.setColour(line);g.fillRoundedRectangle(float(x),float(y),8,float(h),4);float fill=juce::jlimit(0.f,1.f,(matale::db(level)+60)/60);g.setColour(c?cyan:green);g.fillRoundedRectangle(float(x),float(y+h)-h*fill,8,h*fill,4);text(g,c?"R":"L",{x-2,y-18,14,16},9,muted);}
-    auto b=autoBounds;text(g,"Auto Mode",{b.getX()+20,b.getY()+16,220,28},20,ink,true);text(g,"Play a vocal. Press AUTO. Fine-tune if needed.",{b.getX()+20,b.getY()+44,b.getWidth()-40,20},11,muted);int state=processor.autoState.load();if(state==1){meter(g,{float(b.getX()+20),float(b.getBottom()-30),float(b.getWidth()-40),8},matale::gain(processor.progress.load()*60-60));}else if(b.getHeight()>300)text(g,"Dry analysis | adaptive EQ / compression | natural pitch",{b.getX()+20,b.getBottom()-32,b.getWidth()-40,22},11,muted);
+    auto b=autoBounds;text(g,"Auto Mode",{b.getX()+20,b.getY()+16,220,28},20,ink,true);text(g,"Choose a character above, then press AUTO.",{b.getX()+20,b.getY()+44,b.getWidth()-40,20},11,muted);int state=processor.autoState.load();if(state==1){meter(g,{float(b.getX()+20),float(b.getBottom()-30),float(b.getWidth()-40),8},matale::gain(processor.progress.load()*60-60));}else if(b.getHeight()>300)text(g,"Dry analysis | adaptive EQ / compression | natural pitch",{b.getX()+20,b.getBottom()-32,b.getWidth()-40,22},11,muted);
     auto s=smoothBounds;text(g,"Vocal Smooth",{s.getX()+20,s.getY()+16,s.getWidth()-164,28},20,ink,true);text(g,"Dynamic harshness reduction and tonal shaping.",{s.getX()+20,s.getY()+49,s.getWidth()-40,18},11,muted);auto result=juce::Rectangle<int>(s.getX()+18,s.getBottom()-86,s.getWidth()-36,66);g.setColour(juce::Colour(0xffeaf7ff));g.fillRoundedRectangle(result.toFloat(),10);text(g,"Measured processing",result.reduced(12).withHeight(22),12,blue,true);text(g,"Smooth "+juce::String(processor.smoothReduction.load(),1)+" dB  /  De-Esser "+juce::String(processor.deessReduction.load(),1)+" dB",{result.getX()+12,result.getY()+38,result.getWidth()-24,24},11,muted);
 }

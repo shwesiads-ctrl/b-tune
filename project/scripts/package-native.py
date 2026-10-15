@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory(prefix='matale-package-') as tmp:
     for source,target in [(repo/'LICENSE','LICENSE-project-MIT.txt'),(repo/'THIRD_PARTY.md','THIRD-PARTY-NOTICES.md'),(project/'docs/DAW-TESTING.md','READ-ME-FIRST.md'),(project/'Web/public/MataleTune_Source.zip','MataleTune_Source.zip')]:shutil.copy2(source,root/target)
     juce=args.build_dir/'_deps/juce-src/LICENSE.md'
     if juce.is_file():shutil.copy2(juce,root/'JUCE-LICENSE.md')
-    (root/'BUILD-INFO.txt').write_text('Matale Tune 0.9.1 DAW preview\nWindows x64 / VST3\nSource: '+revision+'\nOriginal code: MIT. JUCE and other dependencies retain their licenses.\n',encoding='utf-8')
+    (root/'BUILD-INFO.txt').write_text('Matale Tune 0.10.0 DAW preview\nWindows x64 / VST3\nSource: '+revision+'\nOriginal code: MIT. JUCE and other dependencies retain their licenses.\n',encoding='utf-8')
     args.output.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(root.rglob('*')):

@@ -91,3 +91,22 @@ Binary commit: `67d5294076d67f1dfd52a89e9b65ea5ca74147d7`.
 The user supplied a screenshot of the earlier version inserted and displaying
 live analysis in FL Studio. Listening quality and DAW recall of 0.9.1 remain
 user-host checks.
+
+## Presets and grouped interface 0.10.0
+
+Linux native build and all 10 CTest suites passed. New coverage includes:
+
+- All five factory characters and factory selection through the actual GUI.
+- Real-file round-trip of every parameter, including key, scale, character,
+  output gain, denoise and inclusion settings.
+- Invalid schema, non-numeric/out-of-range values, missing and duplicate IDs
+  rejected without changing any current parameter; failed save reported.
+- Preset changes rejected during active Auto analysis.
+- Measured Auto in Hard Tune character produces style 1, 5 ms retune and
+  zero humanize while retaining the manually selected musical target.
+- Character range limits and exclusion-mask preservation.
+- All five reorganized Manual pages captured for local visual review; all
+  48 manual bindings, rotary-only controls and resize bounds remain checked.
+
+Windows validation and binary publication are pending for this revision.
+Native file-dialog interaction and listening/project recall remain DAW checks.
