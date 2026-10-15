@@ -172,7 +172,7 @@ A stereo-linked output safety limiter uses 128 samples of lookahead and a −0.4
 
 ## Native DAW preview
 
-[Latest Windows VST3: 0.9.1 with branded UI](https://github.com/shwesiads-ctrl/b-tune/raw/67d5294076d67f1dfd52a89e9b65ea5ca74147d7/MataleTune-Windows-x64-VST3.zip)
+[Latest Windows VST3: 0.10.0 with presets and grouped UI](https://github.com/shwesiads-ctrl/b-tune/raw/da1d18ad0973c53bb4ac9760cc327714d0b3e1f7/MataleTune-Windows-x64-VST3.zip)
 
 VST3/AU share a compact four-panel JUCE editor: Vocal Analysis, Output, Auto
 Mode and Vocal Smooth. Native Auto measures dry stereo audio, estimates key
@@ -262,4 +262,21 @@ respected during analysis. Manual pages use navigation buttons, grouped modules,
 live input feedback and a real five-band EQ response curve.
 
 See [native preset usage and DAW checks](project/docs/NATIVE-PRESETS.md).
-Windows validation/download for this revision is pending.
+Windows MSVC build, all 10 native suites and pluginval strictness 5 passed.
+
+### Verified Windows 0.10.0 download
+
+[Download Windows x64 VST3 0.10.0](https://github.com/shwesiads-ctrl/b-tune/raw/da1d18ad0973c53bb4ac9760cc327714d0b3e1f7/MataleTune-Windows-x64-VST3.zip)
+(3.71 MB) · [Windows build/test evidence](https://github.com/shwesiads-ctrl/b-tune/actions/runs/38703172936).
+
+Source `52bac034d90b7352d5fa614b2d8019848b714198`: Windows MSVC build,
+10/10 native tests (including real preset files and measured character-aware
+Auto) and pluginval strictness 5 passed. Archive CRC, matching source, version,
+SHA-256 and PE x64 module were independently verified after publication.
+SHA-256: `7ad0a231ac08590ac431d21d03ee310fccb2518238edca0f67d2a4ca79dda6a4`.
+
+Close the DAW and replace the whole `Matale Tune.vst3` bundle in
+`C:\Program Files\Common Files\VST3\`, then reopen/rescan. Choose an Auto character,
+use AUTO on a vocal phrase, and Save / Load `.matalepreset` files from the header.
+
+![Actual Windows grouped Manual EQ interface](Native-Manual-Preview.png)

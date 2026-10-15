@@ -108,5 +108,15 @@ Linux native build and all 10 CTest suites passed. New coverage includes:
 - All five reorganized Manual pages captured for local visual review; all
   48 manual bindings, rotary-only controls and resize bounds remain checked.
 
-Windows validation and binary publication are pending for this revision.
+Windows run https://github.com/shwesiads-ctrl/b-tune/actions/runs/38703172936
+completed successfully for source `52bac034d90b7352d5fa614b2d8019848b714198`.
+MSVC Windows x64 build, all 10 native suites and pluginval 1.0.4 strictness 5
+passed. The actual Windows grouped EQ screenshot was inspected after download.
+Pluginval GUI tests and the separate Steinberg validator remain skipped as
+previously documented.
+
+The archive was independently checked for CRC, matching source/version, a
+PE machine 0x8664 VST3 module and SHA-256. Archive size: 3,713,391 bytes.
+SHA-256: `7ad0a231ac08590ac431d21d03ee310fccb2518238edca0f67d2a4ca79dda6a4`.
+Binary commit: `da1d18ad0973c53bb4ac9760cc327714d0b3e1f7`.
 Native file-dialog interaction and listening/project recall remain DAW checks.
